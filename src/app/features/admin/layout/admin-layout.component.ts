@@ -75,7 +75,7 @@ import { LucideAngularModule, LayoutDashboard, User, Users, LogOut, CreditCard }
             (click)="auth.logout()"
             class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-danger-50 hover:text-danger-600 transition-all duration-200 cursor-pointer">
             <lucide-angular [img]="LogOutIcon" [size]="18" class="shrink-0" />
-            <span>Cerrar Sesión</span>
+            <span>Cerrar sesión</span>
           </button>
         </div>
       </aside>

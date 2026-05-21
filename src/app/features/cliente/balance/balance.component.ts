@@ -99,7 +99,7 @@ interface PesoHistorial {
           <div class="flex items-center gap-3 mb-5">
             <div class="w-9 h-9 rounded-xl bg-accent-50 flex items-center justify-center text-[#f4b400]"><lucide-angular [img]="ScaleIcon" [size]="18" /></div>
             <div>
-              <h3 class="text-sm font-semibold text-gray-800">Historial de Peso</h3>
+              <h3 class="text-sm font-semibold text-gray-800">Historial de peso</h3>
               <p class="text-xs text-gray-400">Evolución de tu peso corporal</p>
             </div>
           </div>

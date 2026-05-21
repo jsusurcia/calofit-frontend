@@ -213,7 +213,7 @@ import { LucideAngularModule, Flame } from 'lucide-angular';
 
         <!-- Bottom branding -->
         <p class="text-center mt-6 text-xs text-gray-400">
-          © {{ currentYear }} CaloFit · Todos los derechos reservados
+          © {{ currentYear }} CaloFit by Pumpandas · Todos los derechos reservados
         </p>
       </div>
     </div>

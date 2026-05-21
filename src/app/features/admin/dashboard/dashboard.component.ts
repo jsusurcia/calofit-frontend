@@ -34,7 +34,7 @@ import { LucideAngularModule, User, Users, Activity } from 'lucide-angular';
             <div class="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-primary-100 transition-colors duration-300 text-[#146aff]">
               <lucide-angular [img]="UserIcon" [size]="28" />
             </div>
-            <h3 class="text-lg font-bold text-gray-900 mb-2">Gestión de Usuarios</h3>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Gestión de usuarios</h3>
             <p class="text-sm text-gray-500 leading-relaxed mb-6">
               Administra el equipo: administradores, nutricionistas y coaches de la plataforma.
             </p>
@@ -57,7 +57,7 @@ import { LucideAngularModule, User, Users, Activity } from 'lucide-angular';
             <div class="w-14 h-14 bg-success-50 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-success-100 transition-colors duration-300 text-emerald-600">
               <lucide-angular [img]="UsersIcon" [size]="28" />
             </div>
-            <h3 class="text-lg font-bold text-gray-900 mb-2">Gestión de Clientes</h3>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Gestión de clientes</h3>
             <p class="text-sm text-gray-500 leading-relaxed mb-6">
               Visualiza todos los clientes registrados en la plataforma y gestiona sus perfiles.
             </p>
@@ -102,7 +102,7 @@ import { LucideAngularModule, User, Users, Activity } from 'lucide-angular';
       <div class="mt-10 bg-gradient-to-r from-primary-500 to-primary-700 rounded-2xl p-6 md:p-8 text-white">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h3 class="text-lg font-bold">Panel de Administración</h3>
+            <h3 class="text-lg font-bold">Panel de administración</h3>
             <p class="text-primary-100 text-sm mt-1">
               Gestiona usuarios, clientes y supervisa la plataforma CaloFit desde aquí.
             </p>

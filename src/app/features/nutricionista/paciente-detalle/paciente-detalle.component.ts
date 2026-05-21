@@ -150,7 +150,7 @@ interface Pago {
       <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <!-- Weight History -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 class="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2"><lucide-angular [img]="TrendingDownIcon" [size]="16" class="text-[#146aff]" /> Historial de Peso</h2>
+          <h2 class="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2"><lucide-angular [img]="TrendingDownIcon" [size]="16" class="text-[#146aff]" /> Historial de peso</h2>
           <div class="h-64" *ngIf="weightChartData()">
             <canvas baseChart
               [type]="'line'"
@@ -178,7 +178,7 @@ interface Pago {
       <!-- ═══════════════ WEEKLY PLAN ═══════════════ -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-base font-semibold text-gray-900 flex items-center gap-2"><lucide-angular [img]="CalendarDaysIcon" [size]="16" class="text-[#146aff]" /> Plan Semanal</h2>
+          <h2 class="text-base font-semibold text-gray-900 flex items-center gap-2"><lucide-angular [img]="CalendarDaysIcon" [size]="16" class="text-[#146aff]" /> Plan semanal</h2>
           <button (click)="savePlan()" [disabled]="savingPlan()"
             class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#146aff] rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 cursor-pointer">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -230,7 +230,7 @@ interface Pago {
 
       <!-- ═══════════════ STRATEGIC GUIDE ═══════════════ -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 class="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2"><lucide-angular [img]="TargetIcon" [size]="16" class="text-[#146aff]" /> Guía Estratégica</h2>
+        <h2 class="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2"><lucide-angular [img]="TargetIcon" [size]="16" class="text-[#146aff]" /> Guía estratégica</h2>
 
         <!-- AI Focus -->
         <div *ngIf="progreso()!.ai_strategic_focus" class="mb-6 p-4 rounded-xl border-2 border-[#146aff]/20 bg-blue-50/30">
@@ -318,7 +318,7 @@ interface Pago {
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-base font-semibold text-gray-900">✅ Validar Plan Semanal</h2>
+            <h2 class="text-base font-semibold text-gray-900">✅ Validar plan semanal</h2>
             <p class="text-xs text-gray-400 mt-0.5">Al validar, el paciente podrá visualizar su plan actualizado</p>
           </div>
           <button (click)="validatePlan()" [disabled]="validating()"
@@ -396,7 +396,7 @@ interface Pago {
 
       <!-- ═══════════════ HEALTH ALERTS ═══════════════ -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 class="text-base font-semibold text-gray-900 mb-4">🚨 Alertas de Salud</h2>
+        <h2 class="text-base font-semibold text-gray-900 mb-4">🚨 Alertas de salud</h2>
 
         <div *ngIf="!progreso()!.alertas_salud.length" class="text-center py-8">
           <span class="text-3xl block mb-2">✨</span>
@@ -696,14 +696,15 @@ export class PacienteDetalleComponent implements OnInit {
       .subscribe({
         next: (res) => {
           const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-          if (Array.isArray(res) && res.length > 0) {
+          const detalles = res?.detalles_diarios;
+          if (Array.isArray(detalles) && detalles.length > 0) {
             this.weeklyPlan.set(
-              res.map((d: any, i: number) => ({
-                dia: d.dia ?? days[i] ?? `Día ${i + 1}`,
-                calorias: d.calorias ?? 0,
-                proteinas: d.proteinas ?? 0,
-                carbos: d.carbos ?? 0,
-                grasas: d.grasas ?? 0,
+              detalles.map((d: any, i: number) => ({
+                dia: days[i] ?? `Día ${i + 1}`,
+                calorias: d.calorias_dia ?? 0,
+                proteinas: d.proteinas_g ?? 0,
+                carbos: d.carbohidratos_g ?? 0,
+                grasas: d.grasas_g ?? 0,
               }))
             );
           } else {
@@ -727,8 +728,17 @@ export class PacienteDetalleComponent implements OnInit {
 
   savePlan() {
     this.savingPlan.set(true);
+    const payload = {
+      detalles_diarios: this.weeklyPlan().map((d) => ({
+        calorias_dia: d.calorias,
+        proteinas_g: d.proteinas,
+        carbohidratos_g: d.carbos,
+        grasas_g: d.grasas,
+        estado: 'oficial',
+      })),
+    };
     this.http
-      .put(`http://localhost:8000/nutricionista/cliente/${this.pacienteId}/plan`, this.weeklyPlan())
+      .put(`http://localhost:8000/nutricionista/cliente/${this.pacienteId}/plan`, payload)
       .subscribe({
         next: () => {
           this.toastr.success('Plan semanal guardado correctamente', '¡Listo!');

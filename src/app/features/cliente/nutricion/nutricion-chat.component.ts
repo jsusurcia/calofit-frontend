@@ -6,11 +6,21 @@ import { AuthService } from '../../../core/services/auth.service';
 import { DashboardRefreshService } from '../../../core/services/dashboard-refresh.service';
 import { LucideAngularModule, Bot, User } from 'lucide-angular';
 
+interface CaloFitCard {
+  titulo: string;
+  ingredientes: string;
+  pasos: string;
+  stats: string;
+}
+
 interface ChatMessage {
   role: 'user' | 'ai';
   content: string;
   timestamp: Date;
+  cards?: CaloFitCard[];
 }
+
+const NUTRITION_LOG_REGEX = /^(?:me\s+)?(?:com[ií]|tom[eé]|almorc[eé]|cen[eé]|desayun[eé]|beb[ií]|ingeri)\b/i;
 
 @Component({
   selector: 'app-nutricion-chat',
@@ -49,7 +59,38 @@ interface ChatMessage {
                 'bg-white text-gray-800 rounded-2xl rounded-bl-md shadow-sm border border-gray-100': msg.role === 'ai'
               }"
             >
-              <div class="whitespace-pre-wrap" [innerHTML]="formatMessage(msg.content)"></div>
+              @if (msg.content) {
+                <div class="whitespace-pre-wrap" [innerHTML]="formatMessage(msg.content)"></div>
+              }
+              @if (msg.cards && msg.cards.length > 0) {
+                <div class="mt-2 space-y-3">
+                  @for (card of msg.cards; track $index) {
+                    <div class="rounded-xl border border-gray-200 bg-gray-50 overflow-hidden text-xs">
+                      <div class="px-3 py-2 bg-blue-50 border-b border-blue-100 font-semibold text-[#146aff]">
+                        {{ card.titulo }}
+                      </div>
+                      @if (card.stats) {
+                        <div class="px-3 py-2 border-b border-gray-100">
+                          <span class="text-[10px] uppercase tracking-wide text-gray-400 block mb-0.5">Valores nutricionales</span>
+                          <div class="whitespace-pre-wrap text-gray-600" [innerHTML]="formatMessage(card.stats)"></div>
+                        </div>
+                      }
+                      @if (card.ingredientes) {
+                        <div class="px-3 py-2 border-b border-gray-100">
+                          <span class="text-[10px] uppercase tracking-wide text-gray-400 block mb-0.5">Ingredientes</span>
+                          <div class="whitespace-pre-wrap text-gray-700" [innerHTML]="formatMessage(card.ingredientes)"></div>
+                        </div>
+                      }
+                      @if (card.pasos) {
+                        <div class="px-3 py-2">
+                          <span class="text-[10px] uppercase tracking-wide text-gray-400 block mb-0.5">Preparación</span>
+                          <div class="whitespace-pre-wrap text-gray-700" [innerHTML]="formatMessage(card.pasos)"></div>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
               <p
                 class="text-[10px] mt-1.5"
                 [ngClass]="{ 'text-white/60': msg.role === 'user', 'text-gray-400': msg.role === 'ai' }"
@@ -178,6 +219,9 @@ export class NutricionChatComponent implements OnInit {
     const clientId = this.auth.userId();
     if (!clientId) return;
 
+    // Fix 2: detect "Comí X / Tomé X / Almorcé X" patterns → bypass LLM, force REGISTRAR_NUTRICION
+    const isNutritionLog = NUTRITION_LOG_REGEX.test(text);
+
     const historial = this.messages()
       .slice(-10)
       .map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
@@ -195,31 +239,28 @@ export class NutricionChatComponent implements OnInit {
       .post<any>('http://localhost:8000/asistente/consultar', {
         mensaje: text,
         historial,
+        ...(isNutritionLog ? { forzar_intencion: 'REGISTRAR_NUTRICION' } : {}),
       })
       .subscribe({
         next: (res) => {
-          // The backend returns two different response shapes:
-          // 1. Standard chat: { respuesta_ia, intencion, respuesta_estructurada, ... }
-          // 2. Imperative food log: { success, mensaje, tipo_detectado, balance_actualizado, ... }
           const isDirectLog = res.success !== undefined && !res.respuesta_ia;
-          const texto = isDirectLog
-            ? (res.mensaje || 'Registro procesado.')
-            : (res.respuesta_ia || '')
-              .replace(/\*{0,2}\[CALOFIT_INTENT:[A-Z_]+\]\*{0,2}/g, '')
-              .trim();
+          const rawText = isDirectLog ? (res.mensaje || 'Registro procesado.') : (res.respuesta_ia || '');
+
+          // Fix 1: parse CALOFIT structured tags from respuesta_ia
+          const cards = isDirectLog ? [] : this.parseCaloFitResponse(rawText);
+          const texto = (isDirectLog ? rawText : this.stripCaloFitTags(rawText))
+            .replace(/\*{0,2}\[CALOFIT_INTENT:[A-Z_]+\]\*{0,2}/g, '')
+            .trim();
 
           this.messages.update(msgs => [
             ...msgs,
-            { role: 'ai', content: texto, timestamp: new Date() },
+            { role: 'ai', content: texto, timestamp: new Date(), cards: cards.length ? cards : undefined },
           ]);
           this.saveToStorage();
 
-          // Trigger dashboard refresh when food was logged:
-          // - Direct log handler: success === true && tipo_detectado === 'comida'
-          // - Standard chat with intent: intencion is LOG or SUCCESS
           const shouldRefresh = isDirectLog
             ? (res.success && res.tipo_detectado === 'comida')
-            : (res.intencion === 'LOG' || res.intencion === 'SUCCESS');
+            : (res.intencion === 'LOG' || res.intencion === 'SUCCESS' || res.intencion === 'REGISTRAR_NUTRICION');
           if (shouldRefresh) {
             this.dashboardRefresh.refresh();
           }
@@ -257,5 +298,30 @@ export class NutricionChatComponent implements OnInit {
     let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
     return formatted;
+  }
+
+  parseCaloFitResponse(raw: string): CaloFitCard[] {
+    const cards: CaloFitCard[] = [];
+    const cardRegex = /\[CALOFIT_HEADER\](.*?)\[\/CALOFIT_HEADER\](.*?)(?=\[CALOFIT_HEADER\]|$)/gs;
+    let match;
+    while ((match = cardRegex.exec(raw)) !== null) {
+      const block = match[2];
+      cards.push({
+        titulo: match[1].trim(),
+        ingredientes: this.extractBlock(block, 'CALOFIT_LIST'),
+        pasos: this.extractBlock(block, 'CALOFIT_ACTION'),
+        stats: this.extractBlock(block, 'CALOFIT_STATS'),
+      });
+    }
+    return cards;
+  }
+
+  private extractBlock(text: string, tag: string): string {
+    const m = new RegExp(`\\[${tag}\\]([\\s\\S]*?)\\[\\/${tag}\\]`).exec(text);
+    return m ? m[1].trim() : '';
+  }
+
+  private stripCaloFitTags(raw: string): string {
+    return raw.replace(/\[CALOFIT_[A-Z]+\][\s\S]*?\[\/CALOFIT_[A-Z]+\]/g, '').trim();
   }
 }

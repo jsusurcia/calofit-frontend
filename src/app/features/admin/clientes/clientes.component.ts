@@ -31,7 +31,7 @@ interface ClienteAdmin {
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div class="flex items-center gap-3">
-          <h1 class="text-2xl font-bold text-gray-900">Todos los Clientes</h1>
+          <h1 class="text-2xl font-bold text-gray-900">Todos los clientes</h1>
           @if (!loading()) {
             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-primary-100 text-primary-700">
               {{ filteredClientes().length }}

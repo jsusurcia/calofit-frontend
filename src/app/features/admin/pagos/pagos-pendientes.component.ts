@@ -28,7 +28,7 @@ interface PagoListItem {
       <!-- Header -->
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">Cola de Pagos</h1>
+          <h1 class="text-2xl font-bold text-gray-900">Cola de pagos</h1>
           <p class="text-sm text-gray-400 mt-0.5">Pagos pendientes de validación</p>
         </div>
         <button (click)="loadPagos()" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">

@@ -19,7 +19,7 @@ interface UsuarioStaff {
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">Usuarios del Sistema</h1>
+          <h1 class="text-2xl font-bold text-gray-900">Usuarios del sistema</h1>
           <p class="text-sm text-gray-500 mt-1">Gestiona los miembros del equipo</p>
         </div>
         <button
@@ -28,7 +28,7 @@ interface UsuarioStaff {
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
-          Crear Usuario
+          Crear usuario
         </button>
       </div>
 
@@ -144,7 +144,7 @@ interface UsuarioStaff {
           <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl animate-fade-in-up" (click)="$event.stopPropagation()">
             <!-- Modal Header -->
             <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 class="text-lg font-bold text-gray-900">Crear Usuario</h2>
+              <h2 class="text-lg font-bold text-gray-900">Crear usuario</h2>
               <button
                 (click)="showModal.set(false)"
                 class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer">
@@ -157,7 +157,7 @@ interface UsuarioStaff {
             <!-- Modal Body -->
             <div class="px-6 py-5 space-y-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Nombre Completo</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Nombre completo</label>
                 <input type="text" [(ngModel)]="newUser.nombre"
                        class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all"
                        placeholder="Ej: María López">
@@ -196,7 +196,7 @@ interface UsuarioStaff {
               <button
                 (click)="onCreateUser()"
                 class="px-5 py-2.5 bg-primary-500 text-white text-sm font-semibold rounded-xl hover:bg-primary-600 transition-colors shadow-md shadow-primary-500/20 cursor-pointer">
-                Crear Usuario
+                Crear usuario
               </button>
             </div>
           </div>

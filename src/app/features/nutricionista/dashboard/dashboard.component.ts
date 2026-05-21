@@ -105,7 +105,7 @@ interface NutriStats {
       <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <!-- Adherencia Chart -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 class="text-base font-semibold text-gray-900 mb-4">Tendencia de Adherencia</h2>
+          <h2 class="text-base font-semibold text-gray-900 mb-4">Tendencia de adherencia</h2>
           <div class="h-64">
             <canvas baseChart
               [type]="'bar'"
@@ -117,7 +117,7 @@ interface NutriStats {
 
         <!-- Alertas Recientes -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 class="text-base font-semibold text-gray-900 mb-4">Alertas Recientes</h2>
+          <h2 class="text-base font-semibold text-gray-900 mb-4">Alertas recientes</h2>
 
           <div *ngIf="stats()!.alertas_recientes.length === 0" class="flex flex-col items-center py-10 text-gray-400 gap-2">
             <lucide-angular [img]="PartyPopperIcon" [size]="36" class="text-emerald-400" />
