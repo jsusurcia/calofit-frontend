@@ -2,7 +2,8 @@ import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { LucideAngularModule, LayoutDashboard, User, Users, LogOut, CreditCard } from 'lucide-angular';
+import { AdminService } from '../../../core/services/admin.service';
+import { LucideAngularModule, LayoutDashboard, Users, LogOut, CreditCard } from 'lucide-angular';
 
 @Component({
   selector: 'app-admin-layout',
@@ -64,7 +65,12 @@ import { LucideAngularModule, LayoutDashboard, User, Users, LogOut, CreditCard }
               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 border-l-[3px] border-transparent"
               (click)="sidebarOpen.set(false)">
               <lucide-angular [img]="item.icon" [size]="18" class="shrink-0" />
-              <span>{{ item.label }}</span>
+              <span class="flex-1">{{ item.label }}</span>
+              @if (item.route === '/admin/pagos' && pagosPendientesCount() > 0) {
+                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold bg-amber-500 text-white">
+                  {{ pagosPendientesCount() > 9 ? '9+' : pagosPendientesCount() }}
+                </span>
+              }
             </a>
           }
         </nav>
@@ -117,14 +123,26 @@ import { LucideAngularModule, LayoutDashboard, User, Users, LogOut, CreditCard }
 })
 export class AdminLayoutComponent {
   auth = inject(AuthService);
+  private adminService = inject(AdminService);
   sidebarOpen = signal(false);
+  pagosPendientesCount = signal(0);
 
   readonly LogOutIcon = LogOut;
 
   navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', route: '/admin/dashboard', exact: true },
-    { icon: User, label: 'Usuarios', route: '/admin/usuarios', exact: false },
     { icon: Users, label: 'Clientes', route: '/admin/clientes', exact: false },
     { icon: CreditCard, label: 'Pagos', route: '/admin/pagos', exact: false },
   ];
+
+  constructor() {
+    this.loadPagosBadge();
+  }
+
+  private loadPagosBadge(): void {
+    this.adminService.getPagosPendientes().subscribe({
+      next: (res) => this.pagosPendientesCount.set(res.length),
+      error: () => {},
+    });
+  }
 }

@@ -355,7 +355,7 @@ export class ClienteDashboardComponent {
     const d = this.data();
     if (!d) return '';
     switch (d.plan_nutricional.estado_plan) {
-      case 'validado': return 'Plan validado por nutricionista';
+      case 'validado': return 'Plan validado';
       case 'provisional_ia': return 'Plan provisional generado por IA';
       case 'en_revision': return 'Plan en revisión';
       default: return 'Estado del plan';
@@ -378,7 +378,7 @@ export class ClienteDashboardComponent {
 
     forkJoin({
       resumen: this.http.get<ResumenDiario>(
-        `http://localhost:8000/dashboard/clientes/${clienteId}/resumen-diario`
+        'http://localhost:8000/dashboard'
       ),
       balance: this.http.get<{ resumen: BalanceResumen }>(
         'http://localhost:8000/balance/hoy'

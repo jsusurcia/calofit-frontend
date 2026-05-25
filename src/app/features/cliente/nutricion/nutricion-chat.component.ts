@@ -4,7 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 import { DashboardRefreshService } from '../../../core/services/dashboard-refresh.service';
-import { LucideAngularModule, Bot, User, Mic, MicOff } from 'lucide-angular';
+import { ClienteService, PlanNutricional } from '../../../core/services/cliente.service';
+import { ToastrService } from 'ngx-toastr';
+import { LucideAngularModule, Bot, User, Mic, MicOff, Sparkles, ChevronDown, ChevronUp } from 'lucide-angular';
 
 interface CaloFitCard {
   titulo: string;
@@ -27,6 +29,79 @@ const NUTRITION_LOG_REGEX = /^(?:me\s+)?(?:com[ií]|tom[eé]|almorc[eé]|cen[eé
   imports: [CommonModule, FormsModule, LucideAngularModule],
   template: `
     <div class="flex flex-col h-full bg-gray-50">
+
+      <!-- Plan Section -->
+      <div class="bg-white border-b border-gray-200">
+        <!-- Plan header -->
+        <div class="flex items-center justify-between px-5 py-3 cursor-pointer" (click)="planExpanded.set(!planExpanded())">
+          <div class="flex items-center gap-2">
+            <lucide-angular [img]="SparklesIcon" [size]="16" class="text-[#146aff]" />
+            <span class="text-sm font-semibold text-gray-800">Plan nutricional</span>
+            @if (activePlan()) {
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Activo</span>
+            }
+          </div>
+          <lucide-angular [img]="planExpanded() ? ChevronUpIcon : ChevronDownIcon" [size]="16" class="text-gray-400" />
+        </div>
+
+        @if (planExpanded()) {
+          <div class="px-5 pb-4">
+            @if (loadingPlan()) {
+              <div class="flex items-center gap-2 py-3">
+                <div class="w-5 h-5 border-2 border-primary-200 border-t-[#146aff] rounded-full animate-spin"></div>
+                <span class="text-sm text-gray-400">Cargando plan...</span>
+              </div>
+            }
+
+            @if (!loadingPlan() && !activePlan()) {
+              <div class="flex flex-col items-center gap-3 py-4 text-center">
+                <p class="text-sm text-gray-500">No tienes un plan nutricional activo.</p>
+                <button (click)="generarPlan()" [disabled]="generando()"
+                  class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#146aff] text-white text-sm font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-md shadow-[#146aff]/20 cursor-pointer">
+                  @if (generando()) {
+                    <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    Generando con IA...
+                  } @else {
+                    <lucide-angular [img]="SparklesIcon" [size]="15" />
+                    Generar mi plan
+                  }
+                </button>
+              </div>
+            }
+
+            @if (!loadingPlan() && activePlan()) {
+              <div class="space-y-2">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-xs text-gray-400">Estado:</span>
+                  <span class="text-xs font-semibold text-emerald-600 capitalize">{{ activePlan()!.status }}</span>
+                  <span class="text-xs text-gray-400 ml-auto">{{ activePlan()!.created_at | date:'dd/MM/yyyy' }}</span>
+                </div>
+                @for (dia of activePlan()!.dias.slice(0, 2); track dia.dia) {
+                  <div class="bg-gray-50 rounded-xl p-3">
+                    <p class="text-xs font-semibold text-gray-700 mb-1.5 capitalize">{{ dia.dia }}</p>
+                    <div class="space-y-1">
+                      @for (comida of dia.comidas; track comida.tipo) {
+                        <div class="flex items-center justify-between text-xs">
+                          <span class="text-gray-600 capitalize">{{ comida.tipo }}: {{ comida.nombre }}</span>
+                          <span class="text-gray-400 font-medium">{{ comida.calorias }} kcal</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+                @if (activePlan()!.dias.length > 2) {
+                  <p class="text-xs text-gray-400 text-center">+{{ activePlan()!.dias.length - 2 }} días más en el plan</p>
+                }
+                <button (click)="generarPlan()" [disabled]="generando()"
+                  class="w-full mt-1 py-2 text-xs font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-xl transition-colors disabled:opacity-50 cursor-pointer">
+                  {{ generando() ? 'Generando...' : 'Regenerar plan con IA' }}
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
       <!-- Header -->
       <div class="flex items-center gap-3 px-5 py-4 bg-white border-b border-gray-200">
         <div class="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-[#146aff]">
@@ -101,7 +176,7 @@ const NUTRITION_LOG_REGEX = /^(?:me\s+)?(?:com[ií]|tom[eé]|almorc[eé]|cen[eé
 
             <!-- User Avatar -->
             @if (msg.role === 'user') {
-              <div class="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 flex-shrink-0 ml-2 mt-1">
+              <div class="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 shrink-0 ml-2 mt-1">
                 <lucide-angular [img]="UserIcon" [size]="14" />
               </div>
             }
@@ -111,7 +186,7 @@ const NUTRITION_LOG_REGEX = /^(?:me\s+)?(?:com[ií]|tom[eé]|almorc[eé]|cen[eé
         <!-- Typing Indicator -->
         @if (loading()) {
           <div class="flex justify-start animate-fade-in-up">
-            <div class="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-[#146aff] flex-shrink-0 mr-2 mt-1">
+            <div class="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-[#146aff] shrink-0 mr-2 mt-1">
               <lucide-angular [img]="BotIcon" [size]="14" />
             </div>
             <div class="bg-white rounded-2xl rounded-bl-md shadow-sm border border-gray-100 px-5 py-3.5">
@@ -189,17 +264,26 @@ const NUTRITION_LOG_REGEX = /^(?:me\s+)?(?:com[ií]|tom[eé]|almorc[eé]|cen[eé
 export class NutricionChatComponent implements OnInit, OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
+  private readonly clienteService = inject(ClienteService);
+  private readonly toastr = inject(ToastrService);
 
   readonly BotIcon = Bot;
   readonly UserIcon = User;
   readonly MicIcon = Mic;
   readonly MicOffIcon = MicOff;
+  readonly SparklesIcon = Sparkles;
+  readonly ChevronDownIcon = ChevronDown;
+  readonly ChevronUpIcon = ChevronUp;
   private readonly dashboardRefresh = inject(DashboardRefreshService);
   private readonly chatContainer = viewChild<ElementRef>('chatContainer');
 
   readonly messages = signal<ChatMessage[]>([]);
   readonly loading = signal(false);
   readonly listening = signal(false);
+  readonly activePlan = signal<PlanNutricional | null>(null);
+  readonly loadingPlan = signal(false);
+  readonly generando = signal(false);
+  readonly planExpanded = signal(true);
   userInput = '';
 
   readonly speechSupported = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
@@ -266,6 +350,7 @@ export class NutricionChatComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.loadPlanes();
     const clientId = this.auth.userId();
     if (!clientId) { this.setGreeting(); return; }
 
@@ -279,6 +364,33 @@ export class NutricionChatComponent implements OnInit, OnDestroy {
       } catch { /* fall through to greeting */ }
     }
     this.setGreeting();
+  }
+
+  private loadPlanes(): void {
+    this.loadingPlan.set(true);
+    this.clienteService.getPlanes().subscribe({
+      next: (planes) => {
+        const active = planes.find(p => p.status === 'aprobado_ia' || p.status === 'activo') ?? planes[0] ?? null;
+        this.activePlan.set(active);
+        this.loadingPlan.set(false);
+      },
+      error: () => { this.loadingPlan.set(false); },
+    });
+  }
+
+  generarPlan(): void {
+    this.generando.set(true);
+    this.clienteService.generarPlan().subscribe({
+      next: (plan) => {
+        this.activePlan.set(plan);
+        this.generando.set(false);
+        this.toastr.success('¡Tu plan nutricional fue generado con IA!', 'Plan listo');
+      },
+      error: (err) => {
+        this.toastr.error(err?.error?.detail ?? 'Error al generar el plan', 'Error');
+        this.generando.set(false);
+      },
+    });
   }
 
   private setGreeting(): void {

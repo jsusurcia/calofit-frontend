@@ -42,7 +42,7 @@ import { LucideAngularModule, Flame } from 'lucide-angular';
                 <svg class="w-5 h-5 mt-0.5 shrink-0 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <span>Tu cuenta está <strong>pendiente de activación</strong>. Consulta con tu nutricionista para verificar tu pago.</span>
+                <span>Tu cuenta está <strong>pendiente de activación</strong>. Contacta al administrador para verificar tu pago.</span>
               </div>
             </div>
           }
@@ -205,7 +205,7 @@ import { LucideAngularModule, Flame } from 'lucide-angular';
             <p class="text-sm text-gray-500">
               ¿No tienes una cuenta?
               <a [href]="whatsappUrl" target="_blank" rel="noopener noreferrer" class="font-semibold text-primary-500 hover:text-primary-600 transition-colors ml-1">
-                Contacta a tu nutricionista
+                Contacta al administrador
               </a>
             </p>
           </div>

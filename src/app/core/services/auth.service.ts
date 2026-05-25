@@ -82,16 +82,8 @@ export class AuthService {
       return user.is_profile_complete ? '/cliente/dashboard' : '/cliente/onboarding';
     }
 
-    if (user.type === 'staff') {
-      switch (user.role) {
-        case 'admin':
-          return '/admin/dashboard';
-        case 'nutricionista':
-        case 'coach':
-          return '/nutricionista/dashboard';
-        default:
-          return '/login';
-      }
+    if (user.type === 'staff' && user.role === 'admin') {
+      return '/admin/dashboard';
     }
 
     return '/login';

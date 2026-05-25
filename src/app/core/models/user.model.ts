@@ -1,5 +1,5 @@
 export type UserType = 'client' | 'staff';
-export type StaffRole = 'admin' | 'nutricionista' | 'coach';
+export type StaffRole = 'admin';
 
 export interface UserInfo {
   id: number;

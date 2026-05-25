@@ -62,38 +62,12 @@ export const routes: Routes = [
             (m) => m.BalanceComponent
           ),
       },
-    ],
-  },
-  {
-    path: 'nutricionista',
-    canActivate: [authGuard, roleGuard],
-    data: { allowedTypes: ['staff'], allowedRoles: ['nutricionista', 'coach'] },
-    loadComponent: () =>
-      import('./features/nutricionista/layout/nutricionista-layout.component').then(
-        (m) => m.NutricionistaLayoutComponent
-      ),
-    children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
-        path: 'dashboard',
+        path: 'templates',
         loadComponent: () =>
-          import('./features/nutricionista/dashboard/dashboard.component').then(
-            (m) => m.NutricionistaDashboardComponent
+          import('./features/cliente/templates/templates.component').then(
+            (m) => m.TemplatesComponent
           ),
-      },
-      {
-        path: 'pacientes',
-        loadComponent: () =>
-          import('./features/nutricionista/pacientes/pacientes-list.component').then(
-            (m) => m.PacientesListComponent
-          ),
-      },
-      {
-        path: 'paciente/:id',
-        loadComponent: () =>
-          import(
-            './features/nutricionista/paciente-detalle/paciente-detalle.component'
-          ).then((m) => m.PacienteDetalleComponent),
       },
     ],
   },
@@ -112,13 +86,6 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/dashboard/dashboard.component').then(
             (m) => m.AdminDashboardComponent
-          ),
-      },
-      {
-        path: 'usuarios',
-        loadComponent: () =>
-          import('./features/admin/usuarios/usuarios.component').then(
-            (m) => m.UsuariosComponent
           ),
       },
       {

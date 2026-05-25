@@ -2,7 +2,7 @@ import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { LucideAngularModule, Flame, LayoutDashboard, Bot, Activity, LogOut } from 'lucide-angular';
+import { LucideAngularModule, Flame, LayoutDashboard, Bot, Activity, LogOut, UtensilsCrossed } from 'lucide-angular';
 
 @Component({
   selector: 'app-cliente-layout',
@@ -112,10 +112,13 @@ export class ClienteLayoutComponent {
   readonly FlameIcon = Flame;
   readonly LogOutIcon = LogOut;
 
+  readonly UtensilsCrossedIcon = UtensilsCrossed;
+
   readonly navLinks = [
     { path: '/cliente/dashboard', icon: LayoutDashboard, label: 'Dashboard', exact: true },
     { path: '/cliente/nutricion', icon: Bot, label: 'Nutrición IA', exact: false },
     { path: '/cliente/balance', icon: Activity, label: 'Balance', exact: false },
+    { path: '/cliente/templates', icon: UtensilsCrossed, label: 'Recetas', exact: false },
   ];
 
   readonly initials = () => {
