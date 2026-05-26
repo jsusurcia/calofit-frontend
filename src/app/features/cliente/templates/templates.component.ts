@@ -122,7 +122,7 @@ import { LucideAngularModule, UtensilsCrossed, RefreshCw, Filter } from 'lucide-
                 </div>
               </div>
               <!-- Ingredients -->
-              @if (t.ingredientes_principales?.length) {
+              @if (t.ingredientes_principales.length) {
                 <div class="px-5 py-3">
                   <p class="text-[10px] uppercase tracking-wide text-gray-400 mb-1.5">Ingredientes principales</p>
                   <div class="flex flex-wrap gap-1.5">

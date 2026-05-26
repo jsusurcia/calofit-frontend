@@ -56,15 +56,10 @@ const NUTRITION_LOG_REGEX = /^(?:me\s+)?(?:com[ií]|tom[eé]|almorc[eé]|cen[eé
             @if (!loadingPlan() && !activePlan()) {
               <div class="flex flex-col items-center gap-3 py-4 text-center">
                 <p class="text-sm text-gray-500">No tienes un plan nutricional activo.</p>
-                <button (click)="generarPlan()" [disabled]="generando()"
-                  class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#146aff] text-white text-sm font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-md shadow-[#146aff]/20 cursor-pointer">
-                  @if (generando()) {
-                    <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    Generando con IA...
-                  } @else {
-                    <lucide-angular [img]="SparklesIcon" [size]="15" />
-                    Generar mi plan
-                  }
+                <button (click)="generarPlan()"
+                  class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#146aff] text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-md shadow-[#146aff]/20 cursor-pointer">
+                  <lucide-angular [img]="SparklesIcon" [size]="15" />
+                  Consultar mi plan
                 </button>
               </div>
             }
@@ -92,9 +87,9 @@ const NUTRITION_LOG_REGEX = /^(?:me\s+)?(?:com[ií]|tom[eé]|almorc[eé]|cen[eé
                 @if (activePlan()!.dias.length > 2) {
                   <p class="text-xs text-gray-400 text-center">+{{ activePlan()!.dias.length - 2 }} días más en el plan</p>
                 }
-                <button (click)="generarPlan()" [disabled]="generando()"
-                  class="w-full mt-1 py-2 text-xs font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-xl transition-colors disabled:opacity-50 cursor-pointer">
-                  {{ generando() ? 'Generando...' : 'Regenerar plan con IA' }}
+                <button (click)="generarPlan()"
+                  class="w-full mt-1 py-2 text-xs font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-xl transition-colors cursor-pointer">
+                  Consultar plan con IA
                 </button>
               </div>
             }
@@ -282,7 +277,6 @@ export class NutricionChatComponent implements OnInit, OnDestroy {
   readonly listening = signal(false);
   readonly activePlan = signal<PlanNutricional | null>(null);
   readonly loadingPlan = signal(false);
-  readonly generando = signal(false);
   readonly planExpanded = signal(true);
   userInput = '';
 
@@ -379,18 +373,9 @@ export class NutricionChatComponent implements OnInit, OnDestroy {
   }
 
   generarPlan(): void {
-    this.generando.set(true);
-    this.clienteService.generarPlan().subscribe({
-      next: (plan) => {
-        this.activePlan.set(plan);
-        this.generando.set(false);
-        this.toastr.success('¡Tu plan nutricional fue generado con IA!', 'Plan listo');
-      },
-      error: (err) => {
-        this.toastr.error(err?.error?.detail ?? 'Error al generar el plan', 'Error');
-        this.generando.set(false);
-      },
-    });
+    this.planExpanded.set(false);
+    this.userInput = 'Muéstrame mi plan nutricional personalizado';
+    this.sendMessage();
   }
 
   private setGreeting(): void {

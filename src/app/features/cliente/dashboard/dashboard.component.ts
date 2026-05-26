@@ -1,94 +1,37 @@
 import { Component, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { BaseChartDirective } from 'ng2-charts';
-import { LucideAngularModule, Sparkles, BadgeCheck, Bot, Clock, ClipboardList, Flame, Scale } from 'lucide-angular';
-import {
-  Chart,
-  DoughnutController,
-  ArcElement,
-  Tooltip,
-  Legend,
-} from 'chart.js';
+import { LucideAngularModule, Sparkles, RefreshCcw, Calendar, Bot, ClipboardList } from 'lucide-angular';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
-import { DashboardRefreshService } from '../../../core/services/dashboard-refresh.service';
 
-Chart.register(DoughnutController, ArcElement, Tooltip, Legend);
-
-/**
- * Backend response from GET /dashboard/clientes/{id}/resumen-diario
- *
- * Key: `dieta_recomendada` = TARGET macros/cals (what the user SHOULD eat)
- *      `resumen`           = CONSUMED values today (from ProgresoCalorias)
- *      `plan_nutricional`  = full plan details + status
- */
-interface ResumenDiario {
-  dieta_recomendada: {
-    calorias_diarias: number;
-    proteinas_g: number;
-    carbohidratos_g: number;
-    grasas_g: number;
-    imc: number;
-  };
-  calorias_quemadas: number;
-  /** Actual consumed values for today from ProgresoCalorias */
-  resumen: {
-    calorias_consumidas: number;
-    calorias_quemadas: number;
-  };
-  plan_nutricional: {
-    calorias_objetivo: number;
-    proteinas_objetivo_g: number;
-    carbohidratos_objetivo_g: number;
-    grasas_objetivo_g: number;
-    validado: boolean;
-    estado_plan: string;
-    mensaje_cliente: string;
-    distribucion: {
-      proteina_pct: number;
-      carbohidratos_pct: number;
-      grasas_pct: number;
-    };
-  };
-  ai_insight: string;
+interface PlanSemanal {
+  plan_id: number | null;
+  objetivo: string;
+  dias: DiaPlan[];
 }
 
-/**
- * Backend response from GET /balance/hoy → { resumen: BalanceResumen, ... }
- * This is the most detailed source: includes consumed + target macros.
- */
-interface BalanceResumen {
-  calorias_consumidas: number;
-  calorias_quemadas: number;
-  calorias_restantes: number;
-  objetivo_diario: number;
-  proteinas_g: number;
-  carbohidratos_g: number;
-  grasas_g: number;
-  proteinas_objetivo: number;
-  carbohidratos_objetivo: number;
-  grasas_objetivo: number;
+interface DiaPlan {
+  dia_numero: number;
+  comidas: Record<string, string>;
 }
 
 @Component({
   selector: 'app-cliente-dashboard',
-  imports: [CommonModule, BaseChartDirective, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule],
   template: `
     <div class="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
       <!-- Page Title -->
       <div class="animate-fade-in-up">
-        <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
-        <p class="text-sm text-gray-400 mt-1">Tu resumen nutricional de hoy</p>
+        <h1 class="text-2xl font-bold text-gray-800">Mi Menú Semanal</h1>
+        <p class="text-sm text-gray-400 mt-1">Plan de alimentación inteligente y flexible</p>
       </div>
 
       @if (loading()) {
         <div class="flex items-center justify-center py-20">
           <div class="flex flex-col items-center gap-3">
             <div class="w-10 h-10 border-3 border-primary-200 border-t-primary-500 rounded-full animate-spin"></div>
-            <p class="text-sm text-gray-400">Cargando tu resumen...</p>
+            <p class="text-sm text-gray-400">Cargando tu menú...</p>
           </div>
         </div>
       }
@@ -99,109 +42,72 @@ interface BalanceResumen {
         </div>
       }
 
-      @if (data(); as d) {
-        <!-- AI Insight Banner -->
-        <div class="bg-gradient-to-r from-primary-500 to-primary-700 rounded-2xl p-5 text-white shadow-lg animate-fade-in-up">
-          <div class="flex items-start gap-3">
-            <lucide-angular [img]="SparklesIcon" [size]="22" class="flex-shrink-0 mt-0.5 text-white" />
-            <div>
-              <h3 class="font-semibold text-sm uppercase tracking-wide opacity-90 mb-1">Insight IA</h3>
-              <p class="text-sm leading-relaxed opacity-95">{{ d.ai_insight }}</p>
-            </div>
+      @if (data(); as plan) {
+        @if (plan.plan_id) {
+          <!-- Tabs de Días -->
+          <div class="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide animate-fade-in-up">
+            @for (dia of plan.dias; track dia.dia_numero) {
+              <button 
+                (click)="diaSeleccionado.set(dia.dia_numero)"
+                class="px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all cursor-pointer"
+                [ngClass]="diaSeleccionado() === dia.dia_numero ? 'bg-primary-500 text-white shadow-md' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'"
+              >
+                {{ getNombreDia(dia.dia_numero) }}
+              </button>
+            }
           </div>
-        </div>
 
-        <!-- Plan Status Banner -->
-        <div
-          class="rounded-2xl p-4 flex items-center gap-3 animate-fade-in-up"
-          [ngClass]="planStatusClasses()"
-        >
-          <lucide-angular [img]="planStatusIconData()" [size]="20" class="flex-shrink-0" />
-          <div>
-            <p class="font-semibold text-sm">{{ planStatusLabel() }}</p>
-            <p class="text-xs opacity-80 mt-0.5">{{ d.plan_nutricional.mensaje_cliente }}</p>
-          </div>
-        </div>
+          <!-- Comidas del Día Seleccionado -->
+          @if (diaActual(); as diaInfo) {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in-up">
+              @for (tipo of ['desayuno', 'media_manana', 'almuerzo', 'cena']; track tipo) {
+                @if (diaInfo.comidas[tipo]) {
+                  <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 relative group overflow-hidden">
+                    
+                    <div class="flex justify-between items-start mb-3">
+                      <h3 class="text-sm font-bold text-primary-600 uppercase tracking-wide">
+                        {{ formatearTipoComida(tipo) }}
+                      </h3>
+                      <button 
+                        (click)="hacerSwap(plan.plan_id, diaInfo.dia_numero, tipo, diaInfo.comidas[tipo])"
+                        [disabled]="swapping() === tipo"
+                        class="p-2 bg-gray-50 hover:bg-primary-50 text-gray-400 hover:text-primary-600 rounded-full transition-colors cursor-pointer"
+                        title="Cambiar comida"
+                      >
+                        <lucide-angular [img]="RefreshIcon" [size]="18" [class.animate-spin]="swapping() === tipo" />
+                      </button>
+                    </div>
 
-        <!-- Macro Ring Charts -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-in-up">
-          @for (macro of macros(); track macro.label) {
-            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col items-center">
-              <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">{{ macro.label }}</h4>
-              <div class="relative w-32 h-32">
-                <canvas
-                  baseChart
-                  [type]="'doughnut'"
-                  [data]="macro.chartData"
-                  [options]="doughnutOptions"
-                ></canvas>
-                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                  <span class="text-lg font-bold" [style.color]="macro.color">{{ macro.pct }}%</span>
-                  <span class="text-[10px] text-gray-400">{{ macro.consumed | number:'1.0-0' }}g / {{ macro.target | number:'1.0-0' }}g</span>
-                </div>
-              </div>
+                    <p class="text-gray-800 font-medium text-lg mb-2 leading-tight">
+                      {{ diaInfo.comidas[tipo] }}
+                    </p>
+                    
+                    <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-primary-400 to-primary-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  </div>
+                }
+              }
             </div>
           }
-        </div>
-
-        <!-- Calorie Progress -->
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 animate-fade-in-up">
-          <div class="flex items-center justify-between mb-3">
-            <h4 class="text-sm font-semibold text-gray-700">Calorías consumidas</h4>
-            <span class="text-xs text-gray-400">
-              {{ consumedCalories() | number:'1.0-0' }} / {{ targetCalories() | number:'1.0-0' }} kcal
-            </span>
-          </div>
-          <div class="w-full h-4 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              class="h-full rounded-full transition-all duration-700 ease-out"
-              [style.width.%]="caloriePercent()"
-              [ngClass]="{
-                'bg-primary-500': caloriePercent() <= 100,
-                'bg-danger-500': caloriePercent() > 100
-              }"
-            ></div>
-          </div>
-          <p class="text-xs text-gray-400 mt-2">
-            {{ caloriePercent() | number:'1.0-0' }}% de tu objetivo diario
-          </p>
-        </div>
-
-        <!-- Bottom Row -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-in-up">
-          <!-- Calories Burned -->
-          <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-accent-50 flex items-center justify-center text-[#f4b400]">
-              <lucide-angular [img]="FlameIcon" [size]="24" />
+        } @else {
+          <!-- Sin Plan -->
+          <div class="bg-white rounded-2xl p-8 text-center border border-gray-100 shadow-sm animate-fade-in-up">
+            <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+              <lucide-angular [img]="CalendarIcon" [size]="32" />
             </div>
-            <div>
-              <p class="text-xs text-gray-400 font-medium uppercase tracking-wide">Calorías quemadas</p>
-              <p class="text-2xl font-bold text-gray-800">{{ burnedCalories() | number:'1.0-0' }}</p>
-              <p class="text-xs text-gray-400">kcal hoy</p>
-            </div>
+            <h3 class="text-lg font-bold text-gray-900">Aún no tienes un plan</h3>
+            <p class="text-gray-500 mt-2 text-sm max-w-sm mx-auto">
+              Dirígete a la sección de Onboarding para que la inteligencia artificial te genere un plan semanal personalizado.
+            </p>
           </div>
-
-          <!-- IMC Card -->
-          <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-primary-50 flex items-center justify-center text-[#146aff]">
-              <lucide-angular [img]="ScaleIcon" [size]="24" />
-            </div>
-            <div>
-              <p class="text-xs text-gray-400 font-medium uppercase tracking-wide">IMC actual</p>
-              <p class="text-2xl font-bold text-gray-800">{{ d.dieta_recomendada.imc | number:'1.1-1' }}</p>
-              <p class="text-xs text-gray-400">índice de masa corporal</p>
-            </div>
-          </div>
-        </div>
+        }
       }
     </div>
   `,
   styles: [`
     @reference "../../../../styles.css";
-
-    :host {
-      display: block;
-    }
+    :host { display: block; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
   `]
 })
 export class ClienteDashboardComponent {
@@ -209,190 +115,86 @@ export class ClienteDashboardComponent {
   private readonly auth = inject(AuthService);
 
   readonly SparklesIcon = Sparkles;
-  readonly FlameIcon = Flame;
-  readonly ScaleIcon = Scale;
+  readonly RefreshIcon = RefreshCcw;
+  readonly CalendarIcon = Calendar;
+  readonly BotIcon = Bot;
+  readonly ClipboardIcon = ClipboardList;
 
-  readonly data = signal<ResumenDiario | null>(null);
-  readonly balance = signal<BalanceResumen | null>(null);
+  readonly data = signal<PlanSemanal | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+  readonly diaSeleccionado = signal<number>(1);
+  readonly swapping = signal<string | null>(null);
 
-  readonly doughnutOptions: any = {
-    responsive: true,
-    maintainAspectRatio: true,
-    cutout: '75%',
-    plugins: {
-      legend: { display: false },
-      tooltip: { enabled: false },
-    },
-  };
-
-  /**
-   * CONSUMED macros: prioritize /balance/hoy (most detailed), then
-   * fall back to /resumen-diario.resumen, then 0.
-   *
-   * TARGET macros: prioritize /balance/hoy objectives, then
-   * fall back to /resumen-diario.plan_nutricional objectives.
-   *
-   * IMPORTANT: `dieta_recomendada` contains TARGET values, NOT consumed.
-   * The consumed values come from `resumen` (in resumen-diario) or
-   * `balance.resumen` (in /balance/hoy).
-   */
-  readonly macros = computed(() => {
-    const b = this.balance();
-    const d = this.data();
-    if (!d) return [];
-
-    // Consumed: from /balance/hoy if available, otherwise 0
-    // (resumen-diario doesn't return per-macro consumed breakdown)
-    const consumedProteins = b?.proteinas_g ?? 0;
-    const consumedCarbs = b?.carbohidratos_g ?? 0;
-    const consumedFats = b?.grasas_g ?? 0;
-
-    // Target: from /balance/hoy if available, otherwise from plan_nutricional
-    const targetProteins = b?.proteinas_objetivo ?? d.plan_nutricional.proteinas_objetivo_g ?? 0;
-    const targetCarbs = b?.carbohidratos_objetivo ?? d.plan_nutricional.carbohidratos_objetivo_g ?? 0;
-    const targetFats = b?.grasas_objetivo ?? d.plan_nutricional.grasas_objetivo_g ?? 0;
-
-    const items = [
-      {
-        label: 'Proteínas',
-        consumed: consumedProteins,
-        target: targetProteins,
-        color: '#146aff',
-        bgColor: '#e0edff',
-      },
-      {
-        label: 'Carbohidratos',
-        consumed: consumedCarbs,
-        target: targetCarbs,
-        color: '#f4b400',
-        bgColor: '#fef3c7',
-      },
-      {
-        label: 'Grasas',
-        consumed: consumedFats,
-        target: targetFats,
-        color: '#ef4444',
-        bgColor: '#fee2e2',
-      },
-    ];
-
-    return items.map(item => {
-      const pct = item.target > 0 ? Math.min(Math.round((item.consumed / item.target) * 100), 100) : 0;
-      const remaining = Math.max(item.target - item.consumed, 0);
-      return {
-        ...item,
-        pct,
-        chartData: {
-          labels: ['Consumido', 'Restante'],
-          datasets: [{
-            data: [item.consumed, remaining],
-            backgroundColor: [item.color, item.bgColor],
-            borderWidth: 0,
-            borderRadius: 4,
-          }],
-        },
-      };
-    });
-  });
-
-  /** Consumed calories: from /balance/hoy or /resumen-diario.resumen */
-  readonly consumedCalories = computed(() => {
-    const b = this.balance();
-    const d = this.data();
-    return b?.calorias_consumidas ?? d?.resumen?.calorias_consumidas ?? 0;
-  });
-
-  /** Target calories: from /balance/hoy or plan_nutricional */
-  readonly targetCalories = computed(() => {
-    const b = this.balance();
-    const d = this.data();
-    return b?.objetivo_diario ?? d?.plan_nutricional?.calorias_objetivo ?? 0;
-  });
-
-  /** Burned calories: from /balance/hoy or /resumen-diario */
-  readonly burnedCalories = computed(() => {
-    const b = this.balance();
-    const d = this.data();
-    return b?.calorias_quemadas ?? d?.resumen?.calorias_quemadas ?? d?.calorias_quemadas ?? 0;
-  });
-
-  readonly caloriePercent = computed(() => {
-    const consumed = this.consumedCalories();
-    const target = this.targetCalories();
-    if (target === 0) return 0;
-    return Math.round((consumed / target) * 100);
-  });
-
-  readonly planStatusClasses = computed(() => {
-    const d = this.data();
-    if (!d) return '';
-    switch (d.plan_nutricional.estado_plan) {
-      case 'validado':
-        return 'bg-success-50 border border-success-500/20 text-success-700';
-      case 'provisional_ia':
-        return 'bg-primary-50 border border-primary-500/20 text-primary-700';
-      case 'en_revision':
-        return 'bg-accent-50 border border-accent-500/20 text-accent-700';
-      default:
-        return 'bg-gray-50 border border-gray-200 text-gray-600';
-    }
-  });
-
-  readonly planStatusIconData = computed(() => {
-    const d = this.data();
-    if (!d) return ClipboardList;
-    switch (d.plan_nutricional.estado_plan) {
-      case 'validado': return BadgeCheck;
-      case 'provisional_ia': return Bot;
-      case 'en_revision': return Clock;
-      default: return ClipboardList;
-    }
-  });
-
-  readonly planStatusLabel = computed(() => {
-    const d = this.data();
-    if (!d) return '';
-    switch (d.plan_nutricional.estado_plan) {
-      case 'validado': return 'Plan validado';
-      case 'provisional_ia': return 'Plan provisional generado por IA';
-      case 'en_revision': return 'Plan en revisión';
-      default: return 'Estado del plan';
-    }
+  readonly diaActual = computed(() => {
+    const plan = this.data();
+    if (!plan || !plan.dias) return null;
+    return plan.dias.find(d => d.dia_numero === this.diaSeleccionado()) || plan.dias[0];
   });
 
   constructor() {
-    this.loadDashboard();
-    inject(DashboardRefreshService).refresh$
-      .pipe(takeUntilDestroyed())
-      .subscribe(() => this.loadDashboard());
+    this.loadPlan();
   }
 
-  private loadDashboard(): void {
-    const clienteId = this.auth.userId();
-    if (!clienteId) return;
-
+  private loadPlan(): void {
     this.loading.set(true);
     this.error.set(null);
 
-    forkJoin({
-      resumen: this.http.get<ResumenDiario>(
-        'http://localhost:8000/dashboard'
-      ),
-      balance: this.http.get<{ resumen: BalanceResumen }>(
-        'http://localhost:8000/balance/hoy'
-      ).pipe(catchError(() => of(null))),
+    this.http.get<PlanSemanal>('http://localhost:8000/nutricion/plan-actual')
+      .subscribe({
+        next: (res) => {
+          this.data.set(res);
+          // Set to current day if possible
+          const currentDay = new Date().getDay(); // 0=Sun, 1=Mon...
+          const localDay = currentDay === 0 ? 7 : currentDay;
+          if (res.dias && res.dias.find(d => d.dia_numero === localDay)) {
+            this.diaSeleccionado.set(localDay);
+          } else if (res.dias && res.dias.length > 0) {
+            this.diaSeleccionado.set(res.dias[0].dia_numero);
+          }
+          this.loading.set(false);
+        },
+        error: () => {
+          this.error.set('No se pudo cargar el plan semanal. Intenta de nuevo.');
+          this.loading.set(false);
+        },
+      });
+  }
+
+  hacerSwap(planId: number, diaNumero: number, tipoComida: string, comidaActual: string) {
+    if (this.swapping()) return;
+    this.swapping.set(tipoComida);
+
+    this.http.post<any>(`http://localhost:8000/nutricion/${planId}/dia/${diaNumero}/swap`, {
+      tipo_comida: tipoComida,
+      comida_actual: comidaActual
     }).subscribe({
-      next: ({ resumen, balance }) => {
-        this.data.set(resumen);
-        if (balance) this.balance.set(balance.resumen);
-        this.loading.set(false);
+      next: (res) => {
+        // Actualizar localmente el JSON de comidas
+        const plan = this.data();
+        if (plan) {
+          const diaIndex = plan.dias.findIndex(d => d.dia_numero === diaNumero);
+          if (diaIndex !== -1) {
+            plan.dias[diaIndex].comidas = res.dia_comidas;
+            this.data.set({ ...plan });
+          }
+        }
+        this.swapping.set(null);
       },
       error: () => {
-        this.error.set('No se pudo cargar el resumen. Intenta de nuevo más tarde.');
-        this.loading.set(false);
-      },
+        alert('Hubo un error al intentar cambiar la comida.');
+        this.swapping.set(null);
+      }
     });
+  }
+
+  getNombreDia(numero: number): string {
+    const dias: Record<number, string> = { 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado', 7: 'Domingo' };
+    return dias[numero] || 'Día ' + numero;
+  }
+
+  formatearTipoComida(tipo: string): string {
+    if (tipo === 'media_manana') return 'Media Mañana';
+    return tipo;
   }
 }

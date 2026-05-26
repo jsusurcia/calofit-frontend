@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ToastrService } from 'ngx-toastr';
-import { LucideAngularModule, CreditCard, CheckCircle, CircleX, Eye, RefreshCw, Clock, Banknote, Smartphone } from 'lucide-angular';
+import { LucideAngularModule, CreditCard, CheckCircle, CircleX, Eye, RefreshCw, Clock, Banknote, Smartphone, Plus } from 'lucide-angular';
+import { AdminService, ClienteAdmin, RegistrarPagoPayload } from '../../../core/services/admin.service';
 
 const API = 'http://localhost:8000';
 
@@ -31,10 +32,16 @@ interface PagoListItem {
           <h1 class="text-2xl font-bold text-gray-900">Cola de pagos</h1>
           <p class="text-sm text-gray-400 mt-0.5">Pagos pendientes de validación</p>
         </div>
-        <button (click)="loadPagos()" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
-          <lucide-angular [img]="RefreshIcon" [size]="15" />
-          Actualizar
-        </button>
+        <div class="flex items-center gap-2">
+          <button (click)="loadPagos()" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
+            <lucide-angular [img]="RefreshIcon" [size]="15" />
+            Actualizar
+          </button>
+          <button (click)="openRegistrar()" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#146aff] rounded-xl hover:bg-blue-700 transition-colors shadow-md shadow-[#146aff]/20 cursor-pointer">
+            <lucide-angular [img]="PlusIcon" [size]="15" />
+            Registrar pago
+          </button>
+        </div>
       </div>
 
       <!-- Loading -->
@@ -176,6 +183,71 @@ interface PagoListItem {
       }
     </div>
 
+    <!-- Registrar Pago Modal -->
+    @if (showRegistrar()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" (click)="showRegistrar.set(false)">
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" (click)="$event.stopPropagation()">
+          <h3 class="text-lg font-bold text-gray-900 mb-4">Registrar pago</h3>
+
+          <div class="space-y-4">
+            <!-- Cliente -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Cliente <span class="text-red-400">*</span></label>
+              <select [(ngModel)]="registrarForm.client_id"
+                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-[#146aff]/20 focus:border-[#146aff] outline-none transition-all bg-white">
+                <option [value]="0" disabled>Seleccionar cliente...</option>
+                @for (c of clientes(); track c.id) {
+                  <option [value]="c.id">{{ c.nombre }} {{ c.apellido }} — {{ c.email }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Método de pago -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Método de pago <span class="text-red-400">*</span></label>
+              <div class="flex gap-3">
+                <button type="button" (click)="registrarForm.metodo_pago = 'efectivo'"
+                  class="flex-1 py-2.5 text-sm font-semibold rounded-xl border-2 transition-all cursor-pointer"
+                  [ngClass]="registrarForm.metodo_pago === 'efectivo' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'">
+                  Efectivo
+                </button>
+                <button type="button" (click)="registrarForm.metodo_pago = 'yape'"
+                  class="flex-1 py-2.5 text-sm font-semibold rounded-xl border-2 transition-all cursor-pointer"
+                  [ngClass]="registrarForm.metodo_pago === 'yape' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'">
+                  Yape
+                </button>
+              </div>
+            </div>
+
+            <!-- Monto -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Monto (S/) <span class="text-red-400">*</span></label>
+              <input type="number" [(ngModel)]="registrarForm.monto" min="0" step="0.50" placeholder="0.00" readonly
+                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-[#146aff]/20 focus:border-[#146aff] outline-none transition-all bg-gray-50 text-gray-500 cursor-not-allowed" />
+            </div>
+
+            <!-- Concepto -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Concepto</label>
+              <input type="text" [(ngModel)]="registrarForm.concepto" placeholder="Suscripción" readonly
+                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-[#146aff]/20 focus:border-[#146aff] outline-none transition-all bg-gray-50 text-gray-500 cursor-not-allowed" />
+            </div>
+          </div>
+
+          <div class="flex gap-3 mt-6">
+            <button (click)="showRegistrar.set(false)"
+              class="flex-1 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors cursor-pointer">
+              Cancelar
+            </button>
+            <button (click)="submitRegistrar()" [disabled]="registrando()"
+              class="flex-1 py-2.5 text-sm font-semibold text-white bg-[#146aff] rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 cursor-pointer">
+              {{ registrando() ? 'Registrando...' : 'Registrar' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
     <!-- Comprobante Modal -->
     @if (comprobanteUrl()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" (click)="comprobanteUrl.set(null)">
@@ -219,6 +291,7 @@ interface PagoListItem {
 export class PagosPendientesComponent implements OnInit {
   private http = inject(HttpClient);
   private toastr = inject(ToastrService);
+  private adminService = inject(AdminService);
 
   readonly RefreshIcon = RefreshCw;
   readonly CheckCircleIcon = CheckCircle;
@@ -228,16 +301,46 @@ export class PagosPendientesComponent implements OnInit {
   readonly ClockIcon = Clock;
   readonly SmartphoneIcon = Smartphone;
   readonly BanknoteIcon = Banknote;
+  readonly PlusIcon = Plus;
 
   pagos = signal<PagoListItem[]>([]);
+  clientes = signal<ClienteAdmin[]>([]);
   loading = signal(false);
   procesando = signal(false);
+  registrando = signal(false);
   comprobanteUrl = signal<string | null>(null);
   rechazarTarget = signal<PagoListItem | null>(null);
+  showRegistrar = signal(false);
   notasRechazar = '';
+
+  registrarForm: RegistrarPagoPayload = { client_id: 0, metodo_pago: 'efectivo', monto: 7.00, concepto: 'Suscripción' };
 
   ngOnInit() {
     this.loadPagos();
+    this.adminService.getClientes().subscribe({ next: (res) => this.clientes.set(res), error: () => {} });
+  }
+
+  openRegistrar(): void {
+    this.registrarForm = { client_id: 0, metodo_pago: 'efectivo', monto: 7.00, concepto: 'Suscripción' };
+    this.showRegistrar.set(true);
+  }
+
+  submitRegistrar(): void {
+    if (!this.registrarForm.client_id) { this.toastr.warning('Selecciona un cliente', ''); return; }
+    if (!this.registrarForm.monto || this.registrarForm.monto <= 0) { this.toastr.warning('Ingresa un monto válido', ''); return; }
+    this.registrando.set(true);
+    this.adminService.registrarPago(this.registrarForm).subscribe({
+      next: () => {
+        this.toastr.success('Pago registrado correctamente', '¡Registrado!');
+        this.showRegistrar.set(false);
+        this.registrando.set(false);
+        this.loadPagos();
+      },
+      error: (err) => {
+        this.toastr.error(err?.error?.detail ?? 'Error al registrar pago', 'Error');
+        this.registrando.set(false);
+      },
+    });
   }
 
   loadPagos(): void {

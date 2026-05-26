@@ -69,6 +69,13 @@ export const routes: Routes = [
             (m) => m.TemplatesComponent
           ),
       },
+      {
+        path: 'chat',
+        loadComponent: () =>
+          import('./features/cliente/chat/chat.component').then(
+            (m) => m.ChatComponent
+          ),
+      },
     ],
   },
   {

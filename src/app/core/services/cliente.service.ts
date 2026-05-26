@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { AuthService } from './auth.service';
 
 const API = 'http://localhost:8000';
 
@@ -64,6 +66,7 @@ export interface RegistroComida {
 @Injectable({ providedIn: 'root' })
 export class ClienteService {
   private http = inject(HttpClient);
+  private auth = inject(AuthService);
 
   getPerfil(): Observable<PerfilCliente> {
     return this.http.get<PerfilCliente>(`${API}/clientes/perfil`);
@@ -74,15 +77,15 @@ export class ClienteService {
   }
 
   getDashboard(): Observable<any> {
-    return this.http.get<any>(`${API}/dashboard`);
-  }
-
-  generarPlan(): Observable<PlanNutricional> {
-    return this.http.post<PlanNutricional>(`${API}/nutricion/planes`, {});
+    const id = this.auth.userId();
+    return this.http.get<any>(`${API}/dashboard/clientes/${id}/resumen-diario`);
   }
 
   getPlanes(): Observable<PlanNutricional[]> {
-    return this.http.get<PlanNutricional[]>(`${API}/nutricion/planes`);
+    const id = this.auth.userId();
+    return this.http.get<any>(`${API}/dashboard/clientes/${id}/resumen-diario`).pipe(
+      map(r => r?.plan_nutricional ? [r.plan_nutricional] : [])
+    );
   }
 
   getTemplates(filters: TemplateFilters = {}): Observable<RecetaTemplate[]> {

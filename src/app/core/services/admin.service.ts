@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 const API = 'http://localhost:8000';
 
@@ -43,12 +45,19 @@ export interface PagoAdmin {
   fecha_pago: string;
 }
 
+export interface RegistrarPagoPayload {
+  client_id: number;
+  metodo_pago: 'yape' | 'efectivo';
+  monto: number;
+  concepto: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private http = inject(HttpClient);
 
   getDashboard(): Observable<AdminDashboard> {
-    return this.http.get<AdminDashboard>(`${API}/admin/dashboard`);
+    return this.http.get<AdminDashboard>(`${API}/admin/dashboard-stats`);
   }
 
   getClientes(): Observable<ClienteAdmin[]> {
@@ -56,11 +65,15 @@ export class AdminService {
   }
 
   createCliente(data: CreateClientePayload): Observable<ClienteAdmin> {
-    return this.http.post<ClienteAdmin>(`${API}/admin/clientes`, data);
+    return this.http.post<ClienteAdmin>(`${API}/clientes/admin-crear`, data);
   }
 
   deleteCliente(id: number): Observable<unknown> {
     return this.http.delete(`${API}/admin/clientes/${id}`);
+  }
+
+  registrarPago(data: RegistrarPagoPayload): Observable<unknown> {
+    return this.http.post(`${API}/pagos/registrar`, data);
   }
 
   getPagosPendientes(): Observable<PagoAdmin[]> {
