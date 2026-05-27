@@ -42,6 +42,23 @@ interface PesoHistorial {
   peso: number;
 }
 
+interface ResumenDiario {
+  resumen: {
+    calorias_consumidas: number;
+    proteinas_consumidas: number;
+    carbohidratos_consumidos: number;
+    grasas_consumidas: number;
+    calorias_quemadas: number;
+  };
+  plan_nutricional: {
+    calorias_objetivo: number;
+    proteinas_objetivo_g: number;
+    carbohidratos_objetivo_g: number;
+    grasas_objetivo_g: number;
+  };
+  ai_insight: string;
+}
+
 @Component({
   selector: 'app-balance',
   imports: [CommonModule, BaseChartDirective, LucideAngularModule],
@@ -69,12 +86,73 @@ interface PesoHistorial {
       }
 
       @if (!loading() && !error()) {
+        <!-- Resumen Diario -->
+        @if (resumenDiario()) {
+          <div class="bg-white rounded-2xl p-5 md:p-6 shadow-sm border border-gray-100 animate-fade-in-up mb-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center text-green-600">
+                <lucide-angular [img]="ActivityIcon" [size]="18" />
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-gray-800">Progreso de hoy</h3>
+                <p class="text-sm text-gray-500">{{ resumenDiario()!.ai_insight }}</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <!-- Calorías -->
+              <div class="flex flex-col">
+                <div class="flex justify-between mb-1 text-sm">
+                  <span class="font-medium text-gray-700">Calorías</span>
+                  <span class="text-gray-500">{{ resumenDiario()!.resumen.calorias_consumidas | number:'1.0-0' }} / {{ resumenDiario()!.plan_nutricional.calorias_objetivo | number:'1.0-0' }} kcal</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-2.5">
+                  <div class="bg-primary-500 h-2.5 rounded-full transition-all duration-500" [style.width.%]="(resumenDiario()!.resumen.calorias_consumidas / resumenDiario()!.plan_nutricional.calorias_objetivo) * 100 | number:'1.0-0'"></div>
+                </div>
+              </div>
+
+              <!-- Proteínas -->
+              <div class="flex flex-col">
+                <div class="flex justify-between mb-1 text-sm">
+                  <span class="font-medium text-gray-700">Proteínas</span>
+                  <span class="text-gray-500">{{ resumenDiario()!.resumen.proteinas_consumidas | number:'1.0-0' }} / {{ resumenDiario()!.plan_nutricional.proteinas_objetivo_g | number:'1.0-0' }}g</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-2.5">
+                  <div class="bg-blue-500 h-2.5 rounded-full transition-all duration-500" [style.width.%]="(resumenDiario()!.resumen.proteinas_consumidas / resumenDiario()!.plan_nutricional.proteinas_objetivo_g) * 100 | number:'1.0-0'"></div>
+                </div>
+              </div>
+
+              <!-- Carbohidratos -->
+              <div class="flex flex-col">
+                <div class="flex justify-between mb-1 text-sm">
+                  <span class="font-medium text-gray-700">Carbohidratos</span>
+                  <span class="text-gray-500">{{ resumenDiario()!.resumen.carbohidratos_consumidos | number:'1.0-0' }} / {{ resumenDiario()!.plan_nutricional.carbohidratos_objetivo_g | number:'1.0-0' }}g</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-2.5">
+                  <div class="bg-yellow-500 h-2.5 rounded-full transition-all duration-500" [style.width.%]="(resumenDiario()!.resumen.carbohidratos_consumidos / resumenDiario()!.plan_nutricional.carbohidratos_objetivo_g) * 100 | number:'1.0-0'"></div>
+                </div>
+              </div>
+
+              <!-- Grasas -->
+              <div class="flex flex-col">
+                <div class="flex justify-between mb-1 text-sm">
+                  <span class="font-medium text-gray-700">Grasas</span>
+                  <span class="text-gray-500">{{ resumenDiario()!.resumen.grasas_consumidas | number:'1.0-0' }} / {{ resumenDiario()!.plan_nutricional.grasas_objetivo_g | number:'1.0-0' }}g</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-2.5">
+                  <div class="bg-red-500 h-2.5 rounded-full transition-all duration-500" [style.width.%]="(resumenDiario()!.resumen.grasas_consumidas / resumenDiario()!.plan_nutricional.grasas_objetivo_g) * 100 | number:'1.0-0'"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
         <!-- Calorie Trend Chart -->
         <div class="bg-white rounded-2xl p-5 md:p-6 shadow-sm border border-gray-100 animate-fade-in-up">
           <div class="flex items-center gap-3 mb-5">
             <div class="w-9 h-9 rounded-xl bg-primary-50 flex items-center justify-center text-[#146aff]"><lucide-angular [img]="ActivityIcon" [size]="18" /></div>
             <div>
-              <h3 class="text-sm font-semibold text-gray-800">Tendencia de Calorías</h3>
+              <h3 class="text-sm font-semibold text-gray-800">Tendencia de calorías</h3>
               <p class="text-xs text-gray-400">Consumidas vs quemadas por día</p>
             </div>
           </div>
@@ -140,6 +218,7 @@ export class BalanceComponent {
   readonly error = signal<string | null>(null);
   readonly calorieChartData = signal<any>(null);
   readonly weightChartData = signal<any>(null);
+  readonly resumenDiario = signal<ResumenDiario | null>(null);
 
   readonly barChartOptions: any = {
     responsive: true,
@@ -233,8 +312,22 @@ export class BalanceComponent {
     let completed = 0;
     const checkDone = () => {
       completed++;
-      if (completed >= 2) this.loading.set(false);
+      if (completed >= 3) this.loading.set(false);
     };
+
+    // Resumen Diario
+    this.http
+      .get<ResumenDiario>(`http://localhost:8000/dashboard/clientes/${clienteId}/resumen-diario`)
+      .subscribe({
+        next: (data) => {
+          this.resumenDiario.set(data);
+          checkDone();
+        },
+        error: () => {
+          this.error.set('Error al cargar el resumen diario.');
+          checkDone();
+        },
+      });
 
     // Calorie trend
     this.http

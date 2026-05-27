@@ -1,8 +1,9 @@
 import { Component, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { LucideAngularModule, Sparkles, RefreshCcw, Calendar, Bot, ClipboardList } from 'lucide-angular';
+import { LucideAngularModule, Sparkles, RefreshCcw, Calendar, Bot, ClipboardList, Clock } from 'lucide-angular';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -19,7 +20,7 @@ interface DiaPlan {
 
 @Component({
   selector: 'app-cliente-dashboard',
-  imports: [CommonModule, LucideAngularModule, RouterModule],
+  imports: [CommonModule, LucideAngularModule, RouterModule, FormsModule],
   template: `
     <div class="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
       <!-- Page Title -->
@@ -45,6 +46,31 @@ interface DiaPlan {
 
       @if (data(); as plan) {
         @if (plan.plan_id) {
+          <!-- Banner de Recordatorio -->
+          @if (!hasReminderTime() && !reminderSaved()) {
+            <div class="bg-primary-50 border border-primary-200 rounded-2xl p-5 shadow-sm animate-fade-in-up flex flex-col md:flex-row items-center justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <div class="bg-primary-100 p-2 rounded-full text-primary-600">
+                  <lucide-angular [img]="ClockIcon" [size]="24" />
+                </div>
+                <div>
+                  <h3 class="text-primary-800 font-bold text-sm md:text-base">¡Acelera tus resultados!</h3>
+                  <p class="text-primary-600 text-xs md:text-sm">Configura a qué hora quieres que te recordemos registrar tus comidas diarias. Así la IA calculará tus macros automáticamente.</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 w-full md:w-auto">
+                <input type="time" [(ngModel)]="reminderTimeInput" class="px-3 py-2 border border-primary-200 rounded-lg text-sm text-gray-700 bg-white focus:outline-none focus:border-primary-500 w-full md:w-auto">
+                <button (click)="saveReminderTime()" [disabled]="savingReminder()" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 cursor-pointer whitespace-nowrap disabled:opacity-50">
+                  @if(savingReminder()) {
+                    <lucide-angular [img]="RefreshIcon" [size]="16" class="animate-spin" />
+                  } @else {
+                    Guardar
+                  }
+                </button>
+              </div>
+            </div>
+          }
+
           <!-- Tabs de Días -->
           <div class="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide animate-fade-in-up">
             @for (dia of plan.dias; track dia.dia_numero) {
@@ -107,7 +133,7 @@ interface DiaPlan {
                     <lucide-angular [img]="RefreshIcon" [size]="18" class="animate-spin" />
                     Generando...
                   } @else {
-                    Generar Plan Semanal
+                    Generar plan semanal
                   }
                 </button>
               } @else {
@@ -137,6 +163,7 @@ export class ClienteDashboardComponent {
   readonly CalendarIcon = Calendar;
   readonly BotIcon = Bot;
   readonly ClipboardIcon = ClipboardList;
+  readonly ClockIcon = Clock;
 
   readonly data = signal<PlanSemanal | null>(null);
   readonly loading = signal(false);
@@ -144,6 +171,14 @@ export class ClienteDashboardComponent {
   readonly diaSeleccionado = signal<number>(1);
   readonly swapping = signal<string | null>(null);
   readonly generatingPlan = signal(false);
+  
+  readonly reminderTimeInput = signal<string>('20:00');
+  readonly savingReminder = signal(false);
+  readonly reminderSaved = signal(false);
+
+  readonly hasReminderTime = computed(() => {
+    return !!this.auth.currentUser()?.meal_reminder_time;
+  });
 
   readonly isProfileComplete = computed(() => {
     return this.auth.currentUser()?.is_profile_complete ?? false;
@@ -232,6 +267,33 @@ export class ClienteDashboardComponent {
   getNombreDia(numero: number): string {
     const dias: Record<number, string> = { 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado', 7: 'Domingo' };
     return dias[numero] || 'Día ' + numero;
+  }
+
+  saveReminderTime() {
+    if (!this.reminderTimeInput() || this.savingReminder()) return;
+    this.savingReminder.set(true);
+
+    this.http.put<any>('http://localhost:8000/clientes/perfil', {
+      meal_reminder_time: this.reminderTimeInput()
+    }).subscribe({
+      next: (res) => {
+        this.savingReminder.set(false);
+        this.reminderSaved.set(true);
+        // Actualizar el auth service
+        const currentUser = this.auth.currentUser();
+        if (currentUser) {
+          this.auth.updateCurrentUser({
+            ...currentUser,
+            meal_reminder_time: this.reminderTimeInput()
+          });
+        }
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Hubo un error al guardar el recordatorio.');
+        this.savingReminder.set(false);
+      }
+    });
   }
 
   formatearTipoComida(tipo: string): string {

@@ -20,7 +20,7 @@ interface ChatMessage {
       <div class="bg-white border-b border-gray-200 px-6 py-4 flex flex-col justify-center shrink-0">
         <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
           <lucide-angular [img]="BotIcon" [size]="24" class="text-primary-600" />
-          Coach Inteligente
+          CaloCoach
         </h2>
         <p class="text-sm text-gray-500">Pídeme cambios en tu menú o hazme consultas de nutrición.</p>
       </div>
@@ -267,8 +267,8 @@ export class ChatComponent implements AfterViewChecked {
         // Speak the reply
         this.speakResponse(res.reply);
 
-        // If action was taken, maybe refresh dashboard
-        if (res.action_taken === 'swap') {
+        // Refresh dashboard on swap or food registration
+        if (res.action_taken === 'swap' || res.action_taken === 'registrar') {
             this.refreshService.refresh();
         }
       },

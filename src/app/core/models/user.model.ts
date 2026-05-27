@@ -11,6 +11,7 @@ export interface UserInfo {
   profile_picture_url: string | null;
   is_profile_complete: boolean;
   is_active: boolean;
+  meal_reminder_time?: string | null;
 }
 
 export interface LoginRequest {
