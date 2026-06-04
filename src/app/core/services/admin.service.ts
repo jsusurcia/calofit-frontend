@@ -3,8 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
-const API = 'http://calofitbackendmarketing-production.up.railway.app';
+const API = environment.apiUrl;
 
 export interface AdminDashboard {
   total_clientes: number;

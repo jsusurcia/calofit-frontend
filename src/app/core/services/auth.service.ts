@@ -8,8 +8,9 @@ import {
   LoginResponse,
   StaffRole,
 } from '../models/user.model';
+import { environment } from '../../../environments/environment';
 
-const API_URL = 'http://calofitbackendmarketing-production.up.railway.app';
+const API_URL = environment.apiUrl;
 const TOKEN_KEY = 'calofit_token';
 const USER_KEY = 'calofit_user';
 

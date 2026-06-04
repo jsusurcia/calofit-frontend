@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { ToastrService } from 'ngx-toastr';
 import { LucideAngularModule, CreditCard, Smartphone, Banknote, CheckCircle } from 'lucide-angular';
+import { environment } from '../../../../environments/environment';
 
-const API = 'http://calofitbackendmarketing-production.up.railway.app';
+const API = environment.apiUrl;
 const MONTO = 15;
 
 @Component({

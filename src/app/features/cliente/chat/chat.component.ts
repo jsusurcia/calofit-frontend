@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { LucideAngularModule, Mic, Send, Bot, User, MicOff } from 'lucide-angular';
 import { DashboardRefreshService } from '../../../core/services/dashboard-refresh.service';
+import { environment } from '../../../../environments/environment';
 
 interface ChatMessage {
   text: string;
@@ -258,7 +259,7 @@ export class ChatComponent implements AfterViewChecked {
     // Stop speaking if user types
     if (this.synth) this.synth.cancel();
 
-    this.http.post<any>('http://calofitbackendmarketing-production.up.railway.app/chat/mensaje', { message: text }).subscribe({
+    this.http.post<any>(`${environment.apiUrl}/chat/mensaje`, { message: text }).subscribe({
       next: (res) => {
         const replyMsg: ChatMessage = { text: res.reply, sender: 'bot', time: new Date() };
         this.messages.update(m => [...m, replyMsg]);

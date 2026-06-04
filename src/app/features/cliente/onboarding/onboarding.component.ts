@@ -4,8 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
+import { environment } from '../../../../environments/environment';
 
-const API = 'http://calofitbackendmarketing-production.up.railway.app';
+const API = environment.apiUrl;
 
 interface PerfilPayload {
   first_name: string;

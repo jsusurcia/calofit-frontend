@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { LucideAngularModule, Sparkles, RefreshCcw, Calendar, Bot, ClipboardList, Clock } from 'lucide-angular';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../../core/services/auth.service';
+import { environment } from '../../../../environments/environment';
 
 interface PlanSemanal {
   plan_id: number | null;
@@ -203,7 +204,7 @@ export class ClienteDashboardComponent {
     this.loading.set(true);
     this.error.set(null);
 
-    this.http.get<PlanSemanal>('http://calofitbackendmarketing-production.up.railway.app/nutricion/plan-actual')
+    this.http.get<PlanSemanal>(`${environment.apiUrl}/nutricion/plan-actual`)
       .subscribe({
         next: (res) => {
           this.data.set(res);
@@ -228,7 +229,7 @@ export class ClienteDashboardComponent {
     if (this.swapping()) return;
     this.swapping.set(tipoComida);
 
-    this.http.post<any>(`http://calofitbackendmarketing-production.up.railway.app/nutricion/${planId}/dia/${diaNumero}/swap`, {
+    this.http.post<any>(`${environment.apiUrl}/nutricion/${planId}/dia/${diaNumero}/swap`, {
       tipo_comida: tipoComida,
       comida_actual: comidaActual
     }).subscribe({
@@ -256,7 +257,7 @@ export class ClienteDashboardComponent {
     if (this.generatingPlan()) return;
     this.generatingPlan.set(true);
     
-    this.http.post<any>('http://calofitbackendmarketing-production.up.railway.app/nutricion/generar-plan-automatico', {}).subscribe({
+    this.http.post<any>(`${environment.apiUrl}/nutricion/generar-plan-automatico`, {}).subscribe({
       next: () => {
         this.generatingPlan.set(false);
         this.loadPlan();
@@ -278,7 +279,7 @@ export class ClienteDashboardComponent {
     if (!this.reminderTimeInput() || this.savingReminder()) return;
     this.savingReminder.set(true);
 
-    this.http.put<any>('http://calofitbackendmarketing-production.up.railway.app/clientes/perfil', {
+    this.http.put<any>(`${environment.apiUrl}/clientes/perfil`, {
       meal_reminder_time: this.reminderTimeInput()
     }).subscribe({
       next: (res) => {

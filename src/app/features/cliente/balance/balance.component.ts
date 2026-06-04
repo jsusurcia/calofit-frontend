@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { BaseChartDirective } from 'ng2-charts';
 import { LucideAngularModule, Activity, Scale } from 'lucide-angular';
+import { environment } from '../../../../environments/environment';
 import {
   Chart,
   BarController,
@@ -261,7 +262,7 @@ export class BalanceComponent {
 
     // Resumen Diario
     this.http
-      .get<ResumenDiario>(`http://calofitbackendmarketing-production.up.railway.app/dashboard/clientes/${clienteId}/resumen-diario`)
+      .get<ResumenDiario>(`${environment.apiUrl}/dashboard/clientes/${clienteId}/resumen-diario`)
       .subscribe({
         next: (data) => {
           this.resumenDiario.set(data);
@@ -275,7 +276,7 @@ export class BalanceComponent {
 
     // Calorie trend
     this.http
-      .get<CaloriaTendencia[]>(`http://calofitbackendmarketing-production.up.railway.app/dashboard/clientes/${clienteId}/calorias-tendencia`)
+      .get<CaloriaTendencia[]>(`${environment.apiUrl}/dashboard/clientes/${clienteId}/calorias-tendencia`)
       .subscribe({
         next: (data) => {
           if (data && data.length > 0) {

@@ -7,6 +7,7 @@ import { DashboardRefreshService } from '../../../core/services/dashboard-refres
 import { ClienteService, PlanNutricional } from '../../../core/services/cliente.service';
 import { ToastrService } from 'ngx-toastr';
 import { LucideAngularModule, Bot, User, Mic, MicOff, Sparkles, ChevronDown, ChevronUp } from 'lucide-angular';
+import { environment } from '../../../../environments/environment';
 
 interface CalofitCard {
   titulo: string;
@@ -416,7 +417,7 @@ export class NutricionChatComponent implements OnInit, OnDestroy {
     this.scrollToBottom();
 
     this.http
-      .post<any>('http://calofitbackendmarketing-production.up.railway.app/asistente/consultar', {
+      .post<any>(`${environment.apiUrl}/asistente/consultar`, {
         mensaje: text,
         historial,
         ...(isNutritionLog ? { forzar_intencion: 'REGISTRAR_NUTRICION' } : {}),

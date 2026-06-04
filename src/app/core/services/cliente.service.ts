@@ -3,8 +3,9 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
-const API = 'http://calofitbackendmarketing-production.up.railway.app';
+const API = environment.apiUrl;
 
 export interface PerfilCliente {
   id: number;

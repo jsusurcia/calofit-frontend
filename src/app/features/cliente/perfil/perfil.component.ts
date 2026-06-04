@@ -13,8 +13,9 @@ import {
   Shield,
   Pencil,
 } from 'lucide-angular';
+import { environment } from '../../../../environments/environment';
 
-const API_URL = 'http://calofitbackendmarketing-production.up.railway.app';
+const API_URL = environment.apiUrl;
 
 interface PerfilResponse {
   id: number;
