@@ -91,9 +91,9 @@ interface PerfilResponse {
 
           <!-- Botón editar -->
           <a routerLink="/cliente/editar-perfil"
-             class="flex items-center gap-2 px-5 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm cursor-pointer shrink-0">
+             class="flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm cursor-pointer shrink-0">
             <lucide-angular [img]="PencilIcon" [size]="15" />
-            Editar Perfil
+            Editar perfil
           </a>
         </div>
 
@@ -108,7 +108,7 @@ interface PerfilResponse {
             <!-- Información Personal -->
             <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
               <div class="flex items-center gap-2 mb-5">
-                <lucide-angular [img]="UserIcon" [size]="17" class="text-indigo-500" />
+                <lucide-angular [img]="UserIcon" [size]="17" class="text-primary-500" />
                 <h2 class="text-base font-semibold text-gray-800">Información Personal</h2>
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5">
@@ -134,27 +134,27 @@ interface PerfilResponse {
             <!-- Métricas de Salud -->
             <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
               <div class="flex items-center gap-2 mb-5">
-                <lucide-angular [img]="ActivityIcon" [size]="17" class="text-indigo-500" />
+                <lucide-angular [img]="ActivityIcon" [size]="17" class="text-primary-500" />
                 <h2 class="text-base font-semibold text-gray-800">Métricas de Salud</h2>
               </div>
               <div class="grid grid-cols-3 gap-4 text-center">
                 <div class="flex flex-col items-center gap-2">
-                  <div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center">
-                    <lucide-angular [img]="ScaleIcon" [size]="22" class="text-indigo-400" />
+                  <div class="w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center">
+                    <lucide-angular [img]="ScaleIcon" [size]="22" class="text-primary-400" />
                   </div>
                   <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Peso Actual</p>
                   <p class="text-lg font-bold text-gray-800">{{ perfil()!.weight }} kg</p>
                 </div>
                 <div class="flex flex-col items-center gap-2">
-                  <div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center">
-                    <lucide-angular [img]="RulerIcon" [size]="22" class="text-indigo-400" />
+                  <div class="w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center">
+                    <lucide-angular [img]="RulerIcon" [size]="22" class="text-primary-400" />
                   </div>
                   <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Estatura</p>
                   <p class="text-lg font-bold text-gray-800">{{ perfil()!.height }} cm</p>
                 </div>
                 <div class="flex flex-col items-center gap-2">
-                  <div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center">
-                    <lucide-angular [img]="UserIcon" [size]="22" class="text-indigo-400" />
+                  <div class="w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center">
+                    <lucide-angular [img]="UserIcon" [size]="22" class="text-primary-400" />
                   </div>
                   <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Género</p>
                   <p class="text-lg font-bold text-gray-800">{{ generoTexto(perfil()!.gender) }}</p>
@@ -168,15 +168,15 @@ interface PerfilResponse {
               <!-- Nivel de Actividad -->
               <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
                 <div class="flex items-center gap-2 mb-4">
-                  <lucide-angular [img]="ActivityIcon" [size]="17" class="text-indigo-500" />
-                  <h2 class="text-base font-semibold text-gray-800">Nivel de Actividad</h2>
+                  <lucide-angular [img]="ActivityIcon" [size]="17" class="text-primary-500" />
+                  <h2 class="text-base font-semibold text-gray-800">Nivel de actividad</h2>
                 </div>
-                <div class="flex items-center gap-3 bg-indigo-50 rounded-xl px-4 py-3">
+                <div class="flex items-center gap-3 bg-primary-50 rounded-xl px-4 py-3">
                   <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                    <lucide-angular [img]="ActivityIcon" [size]="16" class="text-indigo-500" />
+                    <lucide-angular [img]="ActivityIcon" [size]="16" class="text-primary-500" />
                   </div>
                   <div>
-                    <p class="text-sm font-bold text-indigo-600">{{ perfil()!.activity_level }}</p>
+                    <p class="text-sm font-bold text-primary-600">{{ perfil()!.activity_level }}</p>
                     <p class="text-xs text-gray-500">{{ actividadDescripcion(perfil()!.activity_level) }}</p>
                   </div>
                 </div>
@@ -186,7 +186,7 @@ interface PerfilResponse {
               <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
                 <div class="flex items-center gap-2 mb-4">
                   <lucide-angular [img]="TargetIcon" [size]="17" [ngClass]="goalIconClass(perfil()!.goal)" />
-                  <h2 class="text-base font-semibold text-gray-800">Objetivo Principal</h2>
+                  <h2 class="text-base font-semibold text-gray-800">Objetivo principal</h2>
                 </div>
                 <div class="flex items-center gap-3 rounded-xl px-4 py-3" [ngClass]="goalBgClass(perfil()!.goal)">
                   <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -209,18 +209,18 @@ interface PerfilResponse {
             @let imc = calcularIMC(perfil()!.weight, perfil()!.height);
             @let estadoImc = estadoIMC(imc);
 
-            <div class="rounded-2xl p-6 border border-indigo-200 bg-gradient-to-br from-blue-50 via-indigo-50 to-indigo-100">
-              <p class="text-[11px] font-bold text-indigo-500 uppercase tracking-widest mb-4">
+            <div class="rounded-2xl p-6 border border-primary-200 bg-gradient-to-br from-primary-50 via-primary-50 to-primary-100">
+              <p class="text-[11px] font-bold text-primary-500 uppercase tracking-widest mb-4">
                 Índice de Masa Corporal (IMC)
               </p>
               <div class="flex flex-col items-center gap-1 py-4">
                 <p class="text-6xl font-black text-gray-900 tracking-tight leading-none">{{ imc }}</p>
-                <p class="text-sm text-indigo-400 mt-1">kg/m²</p>
+                <p class="text-sm text-primary-400 mt-1">kg/m²</p>
                 <span class="mt-3 px-6 py-1.5 text-white text-sm font-bold rounded-full shadow-sm" [ngClass]="estadoImc.clase">
                   Estado: {{ estadoImc.texto }}
                 </span>
               </div>
-              <p class="text-xs text-center text-indigo-500 leading-relaxed mt-4">
+              <p class="text-xs text-center text-primary-500 leading-relaxed mt-4">
                 {{ descripcionIMC(imc) }}
               </p>
             </div>
@@ -228,8 +228,8 @@ interface PerfilResponse {
             <!-- Condiciones Médicas -->
             <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
               <div class="flex items-center gap-2 mb-4">
-                <lucide-angular [img]="ShieldIcon" [size]="17" class="text-indigo-500" />
-                <h2 class="text-base font-semibold text-gray-800">Condiciones Médicas</h2>
+                <lucide-angular [img]="ShieldIcon" [size]="17" class="text-primary-500" />
+                <h2 class="text-base font-semibold text-gray-800">Condiciones médicas</h2>
               </div>
               @if (perfil()!.medical_conditions.length > 0) {
                 <div class="flex flex-wrap gap-2">

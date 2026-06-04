@@ -27,7 +27,7 @@ import { LucideAngularModule, Flame, LayoutDashboard, Activity, LogOut, Utensils
         <!-- Logo -->
         <div class="flex items-center gap-2 px-6 py-5 border-b border-gray-100">
           <lucide-angular [img]="FlameIcon" [size]="22" class="text-[#146aff]" />
-          <span class="text-xl font-bold text-primary-500 tracking-tight">CaloFit</span>
+          <span class="text-xl font-bold text-primary-500 tracking-tight">Calofit</span>
         </div>
 
         <!-- User Info -->
@@ -86,7 +86,7 @@ import { LucideAngularModule, Flame, LayoutDashboard, Activity, LogOut, Utensils
           </button>
           <span class="text-lg font-bold text-primary-500 flex items-center gap-1.5">
             <lucide-angular [img]="FlameIcon" [size]="18" class="text-[#146aff]" />
-            CaloFit
+            Calofit
           </span>
         </header>
 
@@ -118,9 +118,8 @@ export class ClienteLayoutComponent {
 
   readonly navLinks = [
     { path: '/cliente/dashboard', icon: LayoutDashboard, label: 'Inicio', exact: true },
-    { path: '/cliente/chat', icon: MessageSquare, label: 'Coach IA', exact: false },
+    { path: '/cliente/chat', icon: MessageSquare, label: 'CaloCoach', exact: false },
     { path: '/cliente/balance', icon: Activity, label: 'Balance', exact: false },
-    { path: '/cliente/pagos', icon: CreditCard, label: 'Pagos', exact: false },
     { path: '/cliente/perfil', icon: User, label: 'Perfil', exact: false },
   ];
 

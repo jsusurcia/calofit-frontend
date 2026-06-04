@@ -40,7 +40,7 @@ interface UpdateResponse {
       <!-- ── Header ── -->
       <div class="flex flex-col sm:flex-row sm:items-start gap-4 justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">Editar Perfil</h1>
+          <h1 class="text-2xl font-bold text-gray-900">Editar perfil</h1>
           <p class="text-sm text-gray-400 mt-1">
             Actualiza tu información personal y métricas de salud para un seguimiento preciso.
           </p>
@@ -52,7 +52,7 @@ interface UpdateResponse {
             Cancelar
           </a>
           <button (click)="save()" [disabled]="saving() || loading()"
-            class="flex items-center gap-2 px-5 py-2.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm cursor-pointer">
+            class="flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm cursor-pointer">
             <lucide-angular [img]="SaveIcon" [size]="15" />
             {{ saving() ? 'Guardando...' : 'Guardar cambios' }}
           </button>
@@ -84,7 +84,7 @@ interface UpdateResponse {
 
           <!-- Encabezado de la tarjeta -->
           <div class="px-6 pt-6 pb-5">
-            <h2 class="text-lg font-bold text-gray-900">Datos de Salud</h2>
+            <h2 class="text-lg font-bold text-gray-900">Datos de salud</h2>
             <p class="text-sm text-gray-400 mt-0.5">Actualiza tus medidas biométricas y preferencias personales.</p>
           </div>
 
@@ -93,8 +93,8 @@ interface UpdateResponse {
           <!-- ── Métricas Vitales ── -->
           <div class="px-6 py-6">
             <div class="flex items-center gap-2 mb-5">
-              <lucide-angular [img]="ScaleIcon" [size]="17" class="text-indigo-500" />
-              <h3 class="text-sm font-semibold text-gray-800">Métricas Vitales</h3>
+              <lucide-angular [img]="ScaleIcon" [size]="17" class="text-primary-500" />
+              <h3 class="text-sm font-semibold text-gray-800">Métricas vitales</h3>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
@@ -106,7 +106,7 @@ interface UpdateResponse {
                     <lucide-angular [img]="ScaleIcon" [size]="16" />
                   </div>
                   <input type="number" [(ngModel)]="weight" name="weight" min="25" max="350" step="0.1"
-                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all" />
+                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 transition-all" />
                 </div>
                 <p class="text-xs text-gray-400 mt-1.5">Ingresa tu peso actual en kilogramos.</p>
               </div>
@@ -119,7 +119,7 @@ interface UpdateResponse {
                     <lucide-angular [img]="RulerIcon" [size]="16" />
                   </div>
                   <input type="number" [(ngModel)]="height" name="height" min="60" max="250"
-                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all" />
+                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 transition-all" />
                 </div>
                 <p class="text-xs text-gray-400 mt-1.5">Ingresa tu altura total en centímetros.</p>
               </div>
@@ -136,11 +136,11 @@ interface UpdateResponse {
               <!-- Nivel de Actividad -->
               <div>
                 <div class="flex items-center gap-2 mb-4">
-                  <lucide-angular [img]="ActivityIcon" [size]="17" class="text-indigo-500" />
-                  <h3 class="text-sm font-semibold text-gray-800">Nivel de Actividad</h3>
+                  <lucide-angular [img]="ActivityIcon" [size]="17" class="text-primary-500" />
+                  <h3 class="text-sm font-semibold text-gray-800">Nivel de actividad</h3>
                 </div>
                 <select [(ngModel)]="activityLevel" name="activityLevel"
-                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 transition-all">
                   <option value="Sedentario">Sedentario (Poca o ninguna actividad)</option>
                   <option value="Ligero">Ligero (Ejercicio 1-3 días/semana)</option>
                   <option value="Moderado">Moderado (Ejercicio 3-5 días/semana)</option>
@@ -152,23 +152,23 @@ interface UpdateResponse {
               <!-- Objetivo de Salud -->
               <div>
                 <div class="flex items-center gap-2 mb-4">
-                  <lucide-angular [img]="TargetIcon" [size]="17" class="text-indigo-500" />
-                  <h3 class="text-sm font-semibold text-gray-800">Objetivo de Salud</h3>
+                  <lucide-angular [img]="TargetIcon" [size]="17" class="text-primary-500" />
+                  <h3 class="text-sm font-semibold text-gray-800">Objetivo</h3>
                 </div>
                 <div class="space-y-3">
                   <label class="flex items-center gap-3 cursor-pointer">
                     <input type="radio" [(ngModel)]="goal" name="goal" value="Perder peso"
-                      class="accent-indigo-500 w-4 h-4 cursor-pointer" />
+                      class="accent-primary-500 w-4 h-4 cursor-pointer" />
                     <span class="text-sm text-gray-700">Perder peso</span>
                   </label>
                   <label class="flex items-center gap-3 cursor-pointer">
                     <input type="radio" [(ngModel)]="goal" name="goal" value="Mantener peso"
-                      class="accent-indigo-500 w-4 h-4 cursor-pointer" />
+                      class="accent-primary-500 w-4 h-4 cursor-pointer" />
                     <span class="text-sm text-gray-700">Mantener peso</span>
                   </label>
                   <label class="flex items-center gap-3 cursor-pointer">
                     <input type="radio" [(ngModel)]="goal" name="goal" value="Ganar masa"
-                      class="accent-indigo-500 w-4 h-4 cursor-pointer" />
+                      class="accent-primary-500 w-4 h-4 cursor-pointer" />
                     <span class="text-sm text-gray-700">Aumentar masa muscular</span>
                   </label>
                 </div>
@@ -182,33 +182,33 @@ interface UpdateResponse {
           <!-- ── Condiciones Médicas ── -->
           <div class="px-6 py-6">
             <div class="flex items-center gap-2 mb-5">
-              <lucide-angular [img]="StethoscopeIcon" [size]="17" class="text-indigo-500" />
-              <h3 class="text-sm font-semibold text-gray-800">Condiciones Médicas</h3>
+              <lucide-angular [img]="StethoscopeIcon" [size]="17" class="text-primary-500" />
+              <h3 class="text-sm font-semibold text-gray-800">Condiciones médicas</h3>
             </div>
             <div class="grid grid-cols-2 gap-y-4 gap-x-8">
               <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" [(ngModel)]="conditions.ninguna" name="ninguna"
-                  class="accent-indigo-500 w-4 h-4 rounded cursor-pointer" />
+                  class="accent-primary-500 w-4 h-4 rounded cursor-pointer" />
                 <span class="text-sm text-gray-700">Ninguna</span>
               </label>
               <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" [(ngModel)]="conditions.diabetes" name="diabetes"
-                  class="accent-indigo-500 w-4 h-4 rounded cursor-pointer" />
+                  class="accent-primary-500 w-4 h-4 rounded cursor-pointer" />
                 <span class="text-sm text-gray-700">Diabetes</span>
               </label>
               <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" [(ngModel)]="conditions.hipertension" name="hipertension"
-                  class="accent-indigo-500 w-4 h-4 rounded cursor-pointer" />
+                  class="accent-primary-500 w-4 h-4 rounded cursor-pointer" />
                 <span class="text-sm text-gray-700">Hipertensión</span>
               </label>
               <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" [(ngModel)]="conditions.asma" name="asma"
-                  class="accent-indigo-500 w-4 h-4 rounded cursor-pointer" />
+                  class="accent-primary-500 w-4 h-4 rounded cursor-pointer" />
                 <span class="text-sm text-gray-700">Asma</span>
               </label>
               <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" [(ngModel)]="conditions.otra" name="otra"
-                  class="accent-indigo-500 w-4 h-4 rounded cursor-pointer" />
+                  class="accent-primary-500 w-4 h-4 rounded cursor-pointer" />
                 <span class="text-sm text-gray-400 italic">Otra condición...</span>
               </label>
             </div>

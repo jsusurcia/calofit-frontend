@@ -40,7 +40,7 @@ const MONTO = 15;
               </div>
               <div>
                 <p class="text-xs text-primary-500 font-medium uppercase tracking-wide">Membresía mensual</p>
-                <p class="text-xs text-primary-400">Acceso completo a CaloFit</p>
+                <p class="text-xs text-primary-400">Acceso completo a Calofit</p>
               </div>
             </div>
             <p class="text-2xl font-bold text-primary-700">S/ {{ MONTO }}.00</p>

@@ -153,7 +153,7 @@ interface ResumenDiario {
             <div class="w-9 h-9 rounded-xl bg-primary-50 flex items-center justify-center text-[#146aff]"><lucide-angular [img]="ActivityIcon" [size]="18" /></div>
             <div>
               <h3 class="text-sm font-semibold text-gray-800">Tendencia de calorías</h3>
-              <p class="text-xs text-gray-400">Consumidas vs quemadas por día</p>
+              <p class="text-xs text-gray-400">Calorías consumidas por día</p>
             </div>
           </div>
           @if (calorieChartData()) {
@@ -172,29 +172,11 @@ interface ResumenDiario {
           }
         </div>
 
-        <!-- Weight History Chart -->
-        <div class="bg-white rounded-2xl p-5 md:p-6 shadow-sm border border-gray-100 animate-fade-in-up">
-          <div class="flex items-center gap-3 mb-5">
-            <div class="w-9 h-9 rounded-xl bg-accent-50 flex items-center justify-center text-[#f4b400]"><lucide-angular [img]="ScaleIcon" [size]="18" /></div>
-            <div>
-              <h3 class="text-sm font-semibold text-gray-800">Historial de peso</h3>
-              <p class="text-xs text-gray-400">Evolución de tu peso corporal</p>
-            </div>
-          </div>
-          @if (weightChartData()) {
-            <div class="h-72">
-              <canvas
-                baseChart
-                [type]="'line'"
-                [data]="weightChartData()!"
-                [options]="lineChartOptions"
-              ></canvas>
-            </div>
-          } @else {
-            <div class="h-72 flex items-center justify-center text-sm text-gray-400">
-              No hay datos de peso disponibles
-            </div>
-          }
+        <!-- Imagen Decorativa (Perezoso) -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 animate-fade-in-up relative overflow-hidden h-72 md:h-80 w-full flex items-center justify-center">
+          <img src="/perezoso.png" alt="Perezoso relajándose" class="absolute inset-0 w-full h-full object-cover" />
+          <!-- Degradado inferior -->
+          <div class="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
         </div>
       }
     </div>
@@ -217,7 +199,6 @@ export class BalanceComponent {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly calorieChartData = signal<any>(null);
-  readonly weightChartData = signal<any>(null);
   readonly resumenDiario = signal<ResumenDiario | null>(null);
 
   readonly barChartOptions: any = {
@@ -261,43 +242,6 @@ export class BalanceComponent {
     },
   };
 
-  readonly lineChartOptions: any = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false,
-      },
-      tooltip: {
-        backgroundColor: '#1f2937',
-        titleFont: { family: 'Inter', size: 12 },
-        bodyFont: { family: 'Inter', size: 11 },
-        padding: 10,
-        cornerRadius: 8,
-        callbacks: {
-          label: (ctx: any) => ` Peso: ${ctx.parsed.y} kg`,
-        },
-      },
-    },
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: { font: { family: 'Inter', size: 11 }, color: '#9ca3af' },
-      },
-      y: {
-        grid: { color: '#f3f4f6' },
-        ticks: {
-          font: { family: 'Inter', size: 11 },
-          color: '#9ca3af',
-          callback: (val: number) => `${val} kg`,
-        },
-      },
-    },
-    elements: {
-      line: { tension: 0.4 },
-    },
-  };
-
   constructor() {
     this.loadData();
   }
@@ -312,7 +256,7 @@ export class BalanceComponent {
     let completed = 0;
     const checkDone = () => {
       completed++;
-      if (completed >= 3) this.loading.set(false);
+      if (completed >= 2) this.loading.set(false);
     };
 
     // Resumen Diario
@@ -347,15 +291,6 @@ export class BalanceComponent {
                   barPercentage: 0.7,
                   categoryPercentage: 0.6,
                 },
-                {
-                  label: 'Quemadas',
-                  data: data.map(d => d.quemadas),
-                  backgroundColor: '#f4b400',
-                  borderRadius: 6,
-                  borderSkipped: false,
-                  barPercentage: 0.7,
-                  categoryPercentage: 0.6,
-                },
               ],
             });
           }
@@ -363,41 +298,6 @@ export class BalanceComponent {
         },
         error: () => {
           this.error.set('Error al cargar tendencias de calorías.');
-          checkDone();
-        },
-      });
-
-    // Weight history
-    this.http
-      .get<PesoHistorial[]>(`http://localhost:8000/dashboard/clientes/${clienteId}/peso-historial`)
-      .subscribe({
-        next: (data) => {
-          if (data && data.length > 0) {
-            this.weightChartData.set({
-              labels: data.map(d => d.fecha),
-              datasets: [
-                {
-                  label: 'Peso',
-                  data: data.map(d => d.peso),
-                  borderColor: '#146aff',
-                  backgroundColor: 'rgba(20, 106, 255, 0.08)',
-                  fill: true,
-                  pointBackgroundColor: '#146aff',
-                  pointBorderColor: '#ffffff',
-                  pointBorderWidth: 2,
-                  pointRadius: 4,
-                  pointHoverRadius: 6,
-                  borderWidth: 2.5,
-                },
-              ],
-            });
-          }
-          checkDone();
-        },
-        error: () => {
-          if (!this.error()) {
-            this.error.set('Error al cargar historial de peso.');
-          }
           checkDone();
         },
       });

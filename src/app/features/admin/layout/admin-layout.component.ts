@@ -32,7 +32,7 @@ import { LucideAngularModule, LayoutDashboard, Users, LogOut, CreditCard } from 
               <span class="text-white font-bold text-lg">C</span>
             </div>
             <div>
-              <h1 class="text-lg font-bold text-gray-900 tracking-tight">CaloFit</h1>
+              <h1 class="text-lg font-bold text-gray-900 tracking-tight">Calofit</h1>
               <p class="text-xs text-gray-500 font-medium">Panel Administrador</p>
             </div>
           </div>
@@ -101,7 +101,7 @@ import { LucideAngularModule, LayoutDashboard, Users, LogOut, CreditCard } from 
             <div class="w-7 h-7 bg-primary-500 rounded-lg flex items-center justify-center">
               <span class="text-white font-bold text-xs">C</span>
             </div>
-            <span class="font-semibold text-gray-900 text-sm">CaloFit Admin</span>
+            <span class="font-semibold text-gray-900 text-sm">Calofit Admin</span>
           </div>
         </header>
 

@@ -17,7 +17,7 @@ import { LucideAngularModule, Users, UserCheck, CreditCard, TrendingUp, CheckCir
           <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
             ¡Hola, {{ auth.fullName() }}!
           </h1>
-          <p class="text-gray-500 mt-1 text-sm">Panel de administración CaloFit</p>
+          <p class="text-gray-500 mt-1 text-sm">Panel de administración Calofit</p>
         </div>
         <button (click)="loadAll()" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
           <lucide-angular [img]="RefreshIcon" [size]="15" />

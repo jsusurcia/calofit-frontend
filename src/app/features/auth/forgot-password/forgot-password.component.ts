@@ -361,7 +361,7 @@ import { AuthService } from '../../../core/services/auth.service';
 
         <!-- Bottom branding -->
         <p class="text-center mt-6 text-xs text-gray-400">
-          © {{ currentYear }} CaloFit · Todos los derechos reservados
+          © {{ currentYear }} Calofit · Todos los derechos reservados
         </p>
       </div>
     </div>

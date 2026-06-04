@@ -8,7 +8,7 @@ import { ClienteService, PlanNutricional } from '../../../core/services/cliente.
 import { ToastrService } from 'ngx-toastr';
 import { LucideAngularModule, Bot, User, Mic, MicOff, Sparkles, ChevronDown, ChevronUp } from 'lucide-angular';
 
-interface CaloFitCard {
+interface CalofitCard {
   titulo: string;
   ingredientes: string;
   pasos: string;
@@ -19,7 +19,7 @@ interface ChatMessage {
   role: 'user' | 'ai';
   content: string;
   timestamp: Date;
-  cards?: CaloFitCard[];
+  cards?: CalofitCard[];
 }
 
 const NUTRITION_LOG_REGEX = /^(?:me\s+)?(?:com[ií]|tom[eé]|almorc[eé]|cen[eé]|desayun[eé]|beb[ií]|ingeri)\b/i;
@@ -381,7 +381,7 @@ export class NutricionChatComponent implements OnInit, OnDestroy {
   private setGreeting(): void {
     this.messages.set([{
       role: 'ai',
-      content: '¡Hola! Soy tu asistente nutricional de CaloFit. ¿En qué puedo ayudarte hoy? 🥗',
+      content: '¡Hola! Soy tu asistente nutricional de Calofit. ¿En qué puedo ayudarte hoy? 🥗',
       timestamp: new Date(),
     }]);
   }
@@ -427,8 +427,8 @@ export class NutricionChatComponent implements OnInit, OnDestroy {
           const rawText = isDirectLog ? (res.mensaje || 'Registro procesado.') : (res.respuesta_ia || '');
 
           // Fix 1: parse CALOFIT structured tags from respuesta_ia
-          const cards = isDirectLog ? [] : this.parseCaloFitResponse(rawText);
-          const texto = (isDirectLog ? rawText : this.stripCaloFitTags(rawText))
+          const cards = isDirectLog ? [] : this.parseCalofitResponse(rawText);
+          const texto = (isDirectLog ? rawText : this.stripCalofitTags(rawText))
             .replace(/\*{0,2}\[CALOFIT_INTENT:[A-Z_]+\]\*{0,2}/g, '')
             .trim();
 
@@ -480,8 +480,8 @@ export class NutricionChatComponent implements OnInit, OnDestroy {
     return formatted;
   }
 
-  parseCaloFitResponse(raw: string): CaloFitCard[] {
-    const cards: CaloFitCard[] = [];
+  parseCalofitResponse(raw: string): CalofitCard[] {
+    const cards: CalofitCard[] = [];
     const cardRegex = /\[CALOFIT_HEADER\](.*?)\[\/CALOFIT_HEADER\](.*?)(?=\[CALOFIT_HEADER\]|$)/gs;
     let match;
     while ((match = cardRegex.exec(raw)) !== null) {
@@ -501,7 +501,7 @@ export class NutricionChatComponent implements OnInit, OnDestroy {
     return m ? m[1].trim() : '';
   }
 
-  private stripCaloFitTags(raw: string): string {
+  private stripCalofitTags(raw: string): string {
     return raw.replace(/\[CALOFIT_[A-Z]+\][\s\S]*?\[\/CALOFIT_[A-Z]+\]/g, '').trim();
   }
 }
