@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import {
   LucideAngularModule,
@@ -37,7 +38,7 @@ interface PerfilResponse {
 
 @Component({
   selector: 'app-perfil',
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, RouterLink, LucideAngularModule],
   template: `
     <div class="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto space-y-8">
 
@@ -89,10 +90,11 @@ interface PerfilResponse {
           </div>
 
           <!-- Botón editar -->
-          <button class="flex items-center gap-2 px-5 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm cursor-pointer shrink-0">
+          <a routerLink="/cliente/editar-perfil"
+             class="flex items-center gap-2 px-5 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm cursor-pointer shrink-0">
             <lucide-angular [img]="PencilIcon" [size]="15" />
             Editar Perfil
-          </button>
+          </a>
         </div>
 
         <hr class="border-gray-100" />

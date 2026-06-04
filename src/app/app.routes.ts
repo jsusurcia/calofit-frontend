@@ -83,6 +83,13 @@ export const routes: Routes = [
             (m) => m.PerfilComponent
           ),
       },
+      {
+        path: 'editar-perfil',
+        loadComponent: () =>
+          import('./features/cliente/editar-perfil/editar-perfil.component').then(
+            (m) => m.EditarPerfilComponent
+          ),
+      },
     ],
   },
   {

@@ -127,15 +127,17 @@ interface PerfilPayload {
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1.5">Peso (kg) <span class="text-red-400">*</span></label>
-                  <input type="number" [(ngModel)]="weight" name="weight" min="1" step="0.1"
+                  <input type="number" [(ngModel)]="weight" name="weight" min="25" max="350" step="0.1"
                     placeholder="70"
                     class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#146aff]/20 focus:border-[#146aff] transition-all" />
+                  <p class="text-[11px] text-gray-400 mt-1">Entre 25 y 350 kg</p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1.5">Altura (cm) <span class="text-red-400">*</span></label>
-                  <input type="number" [(ngModel)]="height" name="height" min="1"
+                  <input type="number" [(ngModel)]="height" name="height" min="60" max="250"
                     placeholder="170"
                     class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#146aff]/20 focus:border-[#146aff] transition-all" />
+                  <p class="text-[11px] text-gray-400 mt-1">Entre 60 y 250 cm</p>
                 </div>
               </div>
 
@@ -266,12 +268,19 @@ export class OnboardingComponent {
 
   submit(): void {
     this.step2Error.set(null);
-    if (!this.weight || this.weight <= 0) {
-      this.step2Error.set('Ingresa un peso válido.');
+
+    if (!this.weight || this.weight < 25 || this.weight > 350) {
+      this.step2Error.set('El peso debe estar entre 25 y 350 kg.');
       return;
     }
-    if (!this.height || this.height <= 0) {
-      this.step2Error.set('Ingresa una altura válida.');
+    if (!this.height || this.height < 60 || this.height > 250) {
+      this.step2Error.set('La altura debe estar entre 60 y 250 cm.');
+      return;
+    }
+
+    const imc = this.weight / Math.pow(this.height / 100, 2);
+    if (imc < 10 || imc > 90) {
+      this.step2Error.set(`La combinación de peso y altura genera un IMC de ${imc.toFixed(1)}, lo cual está fuera de rango. Verifica los valores ingresados.`);
       return;
     }
 
