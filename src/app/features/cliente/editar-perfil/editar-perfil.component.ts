@@ -15,7 +15,7 @@ import {
   Save,
 } from 'lucide-angular';
 
-const API_URL = 'http://localhost:8000';
+const API_URL = 'http://calofitbackendmarketing-production.up.railway.app';
 
 interface PerfilResponse {
   weight: number;

@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 
-const API = 'http://localhost:8000';
+const API = 'http://calofitbackendmarketing-production.up.railway.app';
 
 interface PerfilPayload {
   first_name: string;

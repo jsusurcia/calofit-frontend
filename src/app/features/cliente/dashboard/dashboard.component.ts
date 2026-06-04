@@ -203,7 +203,7 @@ export class ClienteDashboardComponent {
     this.loading.set(true);
     this.error.set(null);
 
-    this.http.get<PlanSemanal>('http://localhost:8000/nutricion/plan-actual')
+    this.http.get<PlanSemanal>('http://calofitbackendmarketing-production.up.railway.app/nutricion/plan-actual')
       .subscribe({
         next: (res) => {
           this.data.set(res);
@@ -228,7 +228,7 @@ export class ClienteDashboardComponent {
     if (this.swapping()) return;
     this.swapping.set(tipoComida);
 
-    this.http.post<any>(`http://localhost:8000/nutricion/${planId}/dia/${diaNumero}/swap`, {
+    this.http.post<any>(`http://calofitbackendmarketing-production.up.railway.app/nutricion/${planId}/dia/${diaNumero}/swap`, {
       tipo_comida: tipoComida,
       comida_actual: comidaActual
     }).subscribe({
@@ -256,7 +256,7 @@ export class ClienteDashboardComponent {
     if (this.generatingPlan()) return;
     this.generatingPlan.set(true);
     
-    this.http.post<any>('http://localhost:8000/nutricion/generar-plan-automatico', {}).subscribe({
+    this.http.post<any>('http://calofitbackendmarketing-production.up.railway.app/nutricion/generar-plan-automatico', {}).subscribe({
       next: () => {
         this.generatingPlan.set(false);
         this.loadPlan();
@@ -278,7 +278,7 @@ export class ClienteDashboardComponent {
     if (!this.reminderTimeInput() || this.savingReminder()) return;
     this.savingReminder.set(true);
 
-    this.http.put<any>('http://localhost:8000/clientes/perfil', {
+    this.http.put<any>('http://calofitbackendmarketing-production.up.railway.app/clientes/perfil', {
       meal_reminder_time: this.reminderTimeInput()
     }).subscribe({
       next: (res) => {

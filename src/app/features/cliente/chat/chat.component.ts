@@ -258,7 +258,7 @@ export class ChatComponent implements AfterViewChecked {
     // Stop speaking if user types
     if (this.synth) this.synth.cancel();
 
-    this.http.post<any>('http://localhost:8000/chat/mensaje', { message: text }).subscribe({
+    this.http.post<any>('http://calofitbackendmarketing-production.up.railway.app/chat/mensaje', { message: text }).subscribe({
       next: (res) => {
         const replyMsg: ChatMessage = { text: res.reply, sender: 'bot', time: new Date() };
         this.messages.update(m => [...m, replyMsg]);

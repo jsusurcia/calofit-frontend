@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-const API = 'http://localhost:8000';
+const API = 'http://calofitbackendmarketing-production.up.railway.app';
 
 export interface AdminDashboard {
   total_clientes: number;

@@ -261,7 +261,7 @@ export class BalanceComponent {
 
     // Resumen Diario
     this.http
-      .get<ResumenDiario>(`http://localhost:8000/dashboard/clientes/${clienteId}/resumen-diario`)
+      .get<ResumenDiario>(`http://calofitbackendmarketing-production.up.railway.app/dashboard/clientes/${clienteId}/resumen-diario`)
       .subscribe({
         next: (data) => {
           this.resumenDiario.set(data);
@@ -275,7 +275,7 @@ export class BalanceComponent {
 
     // Calorie trend
     this.http
-      .get<CaloriaTendencia[]>(`http://localhost:8000/dashboard/clientes/${clienteId}/calorias-tendencia`)
+      .get<CaloriaTendencia[]>(`http://calofitbackendmarketing-production.up.railway.app/dashboard/clientes/${clienteId}/calorias-tendencia`)
       .subscribe({
         next: (data) => {
           if (data && data.length > 0) {

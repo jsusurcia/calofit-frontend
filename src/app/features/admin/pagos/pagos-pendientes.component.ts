@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { ToastrService } from 'ngx-toastr';
 import { LucideAngularModule, CreditCard, CheckCircle, CircleX, Eye, RefreshCw, Clock, Banknote, Smartphone } from 'lucide-angular';
 
-const API = 'http://localhost:8000';
+const API = 'http://calofitbackendmarketing-production.up.railway.app';
 
 interface PagoListItem {
   id: number;

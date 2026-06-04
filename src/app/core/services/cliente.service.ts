@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 
-const API = 'http://localhost:8000';
+const API = 'http://calofitbackendmarketing-production.up.railway.app';
 
 export interface PerfilCliente {
   id: number;

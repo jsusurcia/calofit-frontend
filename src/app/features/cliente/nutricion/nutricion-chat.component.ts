@@ -416,7 +416,7 @@ export class NutricionChatComponent implements OnInit, OnDestroy {
     this.scrollToBottom();
 
     this.http
-      .post<any>('http://localhost:8000/asistente/consultar', {
+      .post<any>('http://calofitbackendmarketing-production.up.railway.app/asistente/consultar', {
         mensaje: text,
         historial,
         ...(isNutritionLog ? { forzar_intencion: 'REGISTRAR_NUTRICION' } : {}),

@@ -9,7 +9,7 @@ import {
   StaffRole,
 } from '../models/user.model';
 
-const API_URL = 'http://localhost:8000';
+const API_URL = 'http://calofitbackendmarketing-production.up.railway.app';
 const TOKEN_KEY = 'calofit_token';
 const USER_KEY = 'calofit_user';
 
