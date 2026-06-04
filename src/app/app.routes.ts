@@ -76,6 +76,13 @@ export const routes: Routes = [
             (m) => m.ChatComponent
           ),
       },
+      {
+        path: 'pagos',
+        loadComponent: () =>
+          import('./features/cliente/pagos/pago.component').then(
+            (m) => m.PagoComponent
+          ),
+      },
     ],
   },
   {

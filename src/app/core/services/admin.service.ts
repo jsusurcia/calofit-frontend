@@ -25,8 +25,6 @@ export interface ClienteAdmin {
 }
 
 export interface CreateClientePayload {
-  nombre: string;
-  apellido: string;
   email: string;
   password: string;
   telefono?: string;
@@ -37,6 +35,7 @@ export interface PagoAdmin {
   client_id: number;
   client_nombre: string;
   client_email: string;
+  client_phone: string | null;
   metodo_pago: 'yape' | 'efectivo';
   estado: 'pendiente' | 'aprobado' | 'rechazado';
   monto: number | null;

@@ -244,6 +244,15 @@ export class OnboardingComponent {
       this.step1Error.set('La fecha de nacimiento es requerida.');
       return;
     }
+    const hoy = new Date();
+    const nacimiento = new Date(this.birthDate);
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const m = hoy.getMonth() - nacimiento.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < nacimiento.getDate())) edad--;
+    if (nacimiento >= hoy || edad < 1 || edad > 120) {
+      this.step1Error.set('Ingresa una fecha de nacimiento válida.');
+      return;
+    }
     if (!this.gender) {
       this.step1Error.set('Selecciona un género.');
       return;
@@ -254,6 +263,7 @@ export class OnboardingComponent {
   addCondition(): void {
     const val = this.conditionInput.trim();
     if (!val) return;
+    if (!/[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]/.test(val)) return;
     if (!this.medicalConditions().includes(val)) {
       this.medicalConditions.update(list => [...list, val]);
     }

@@ -90,14 +90,14 @@ interface DiaPlan {
               @for (tipo of ['desayuno', 'media_manana', 'almuerzo', 'cena']; track tipo) {
                 @if (diaInfo.comidas[tipo]) {
                   <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 relative group overflow-hidden">
-                    
+
                     <div class="flex justify-between items-start mb-3">
                       <h3 class="text-sm font-bold text-primary-600 uppercase tracking-wide">
                         {{ formatearTipoComida(tipo) }}
                       </h3>
-                      <button 
+                      <button
                         (click)="hacerSwap(plan.plan_id, diaInfo.dia_numero, tipo, diaInfo.comidas[tipo])"
-                        [disabled]="swapping() === tipo"
+                        [disabled]="swapping() !== null"
                         class="p-2 bg-gray-50 hover:bg-primary-50 text-gray-400 hover:text-primary-600 rounded-full transition-colors cursor-pointer"
                         title="Cambiar comida"
                       >
@@ -108,7 +108,14 @@ interface DiaPlan {
                     <p class="text-gray-800 font-medium text-lg mb-2 leading-tight">
                       {{ diaInfo.comidas[tipo] }}
                     </p>
-                    
+
+                    @if (swapping() === tipo) {
+                      <div class="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2 rounded-2xl">
+                        <lucide-angular [img]="RefreshIcon" [size]="24" class="text-primary-500 animate-spin" />
+                        <span class="text-sm font-medium text-primary-600">Buscando alternativa...</span>
+                      </div>
+                    }
+
                     <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-primary-400 to-primary-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   </div>
                 }
@@ -122,9 +129,7 @@ interface DiaPlan {
               <lucide-angular [img]="CalendarIcon" [size]="32" />
             </div>
             <h3 class="text-lg font-bold text-gray-900">Aún no tienes un plan</h3>
-            <p class="text-gray-500 mt-2 text-sm max-w-sm mx-auto">
-              Dirígete a la sección de Onboarding para que la inteligencia artificial te genere un plan semanal personalizado.
-            </p>
+            
             <div class="mt-6">
               @if (isProfileComplete()) {
                 <button (click)="generarPlan()" [disabled]="generatingPlan()"

@@ -2,7 +2,7 @@ import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { LucideAngularModule, Flame, LayoutDashboard, Bot, Activity, LogOut, UtensilsCrossed, MessageSquare } from 'lucide-angular';
+import { LucideAngularModule, Flame, LayoutDashboard, Bot, Activity, LogOut, UtensilsCrossed, MessageSquare, CreditCard } from 'lucide-angular';
 
 @Component({
   selector: 'app-cliente-layout',
@@ -118,6 +118,7 @@ export class ClienteLayoutComponent {
     { path: '/cliente/dashboard', icon: LayoutDashboard, label: 'Inicio', exact: true },
     { path: '/cliente/chat', icon: MessageSquare, label: 'Coach IA', exact: false },
     { path: '/cliente/balance', icon: Activity, label: 'Balance', exact: false },
+    { path: '/cliente/pagos', icon: CreditCard, label: 'Pagos', exact: false },
   ];
 
   readonly initials = () => {
