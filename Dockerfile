@@ -9,7 +9,7 @@ RUN pnpm run build
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
-COPY --from=builder /app/browser /usr/share/nginx/html
+COPY --from=builder /app/browser/browser /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 ENV PORT=8080
 EXPOSE 8080
