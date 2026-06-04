@@ -76,6 +76,13 @@ export const routes: Routes = [
             (m) => m.ChatComponent
           ),
       },
+      {
+        path: 'perfil',
+        loadComponent: () =>
+          import('./features/cliente/perfil/perfil.component').then(
+            (m) => m.PerfilComponent
+          ),
+      },
     ],
   },
   {
