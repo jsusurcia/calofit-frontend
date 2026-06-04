@@ -2,7 +2,7 @@ import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { LucideAngularModule, Flame, LayoutDashboard, Bot, Activity, LogOut, UtensilsCrossed, MessageSquare, CreditCard } from 'lucide-angular';
+import { LucideAngularModule, Flame, LayoutDashboard, Activity, LogOut, UtensilsCrossed, MessageSquare, User, CreditCard } from 'lucide-angular';
 
 @Component({
   selector: 'app-cliente-layout',
@@ -32,15 +32,16 @@ import { LucideAngularModule, Flame, LayoutDashboard, Bot, Activity, LogOut, Ute
 
         <!-- User Info -->
         <div class="px-6 py-4 border-b border-gray-100">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-semibold text-sm">
+          <a routerLink="/cliente/perfil" (click)="sidebarOpen.set(false)"
+             class="flex items-center gap-3 rounded-xl hover:bg-gray-50 transition-colors -mx-2 px-2 py-1.5 cursor-pointer">
+            <div class="w-10 h-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-semibold text-sm shrink-0">
               {{ initials() }}
             </div>
             <div class="min-w-0">
               <p class="text-sm font-medium text-gray-800 truncate">{{ auth.fullName() }}</p>
               <p class="text-xs text-gray-400">Cliente</p>
             </div>
-          </div>
+          </a>
         </div>
 
         <!-- Nav Links -->
@@ -113,12 +114,14 @@ export class ClienteLayoutComponent {
   readonly LogOutIcon = LogOut;
 
   readonly UtensilsCrossedIcon = UtensilsCrossed;
+  readonly UserIcon = User;
 
   readonly navLinks = [
     { path: '/cliente/dashboard', icon: LayoutDashboard, label: 'Inicio', exact: true },
     { path: '/cliente/chat', icon: MessageSquare, label: 'Coach IA', exact: false },
     { path: '/cliente/balance', icon: Activity, label: 'Balance', exact: false },
     { path: '/cliente/pagos', icon: CreditCard, label: 'Pagos', exact: false },
+    { path: '/cliente/perfil', icon: User, label: 'Perfil', exact: false },
   ];
 
   readonly initials = () => {
