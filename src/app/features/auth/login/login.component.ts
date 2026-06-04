@@ -26,13 +26,7 @@ import { LucideAngularModule, Flame } from 'lucide-angular';
         <div class="bg-white rounded-2xl shadow-xl shadow-primary-500/5 border border-gray-100 p-8 sm:p-10">
           <!-- Logo & Title -->
           <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-primary-50 rounded-2xl mb-4 text-[#146aff]">
-              <lucide-angular [img]="FlameIcon" [size]="32" />
-            </div>
-            <h1 class="text-3xl font-bold text-gray-900 tracking-tight">
-              Calo<span class="text-primary-500">Fit</span>
-            </h1>
-            <p class="mt-2 text-sm text-gray-500 font-medium">Tu nutrición inteligente</p>
+            <img src="/calofitlogo.png" alt="Logo de Calofit" class="w-32 h-auto mx-auto" />
           </div>
 
           <!-- Pending Account Alert -->
