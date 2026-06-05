@@ -1,7 +1,6 @@
 import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../environments/environment';
@@ -213,7 +212,6 @@ interface PerfilPayload {
 export class OnboardingComponent {
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
 
   readonly step = signal<1 | 2>(1);
   readonly submitting = signal(false);
@@ -313,19 +311,7 @@ export class OnboardingComponent {
 
     this.http.put(`${API}/clientes/perfil`, payload).subscribe({
       next: () => {
-        this.http.get<any>(`${API}/clientes/perfil`).subscribe({
-          next: (perfil) => {
-            this.auth.updateCurrentUser(perfil);
-            this.router.navigate(['/cliente/dashboard']);
-          },
-          error: () => {
-            const user = this.auth.currentUser();
-            if (user) {
-              this.auth.updateCurrentUser({ ...user, is_profile_complete: true });
-            }
-            this.router.navigate(['/cliente/dashboard']);
-          },
-        });
+        this.auth.logout();
       },
       error: (err) => {
         this.step2Error.set(err?.error?.detail ?? 'Error al guardar perfil. Intenta de nuevo.');

@@ -23,6 +23,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'cliente/onboarding',
+    canActivate: [authGuard, onboardingGuard],
+    loadComponent: () =>
+      import('./features/cliente/onboarding/onboarding.component').then(
+        (m) => m.OnboardingComponent
+      ),
+  },
+  {
     path: 'cliente',
     canActivate: [authGuard, roleGuard],
     data: { allowedTypes: ['client'] },
@@ -32,14 +40,6 @@ export const routes: Routes = [
       ),
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      {
-        path: 'onboarding',
-        canActivate: [authGuard, onboardingGuard],
-        loadComponent: () =>
-          import('./features/cliente/onboarding/onboarding.component').then(
-            (m) => m.OnboardingComponent
-          ),
-      },
       {
         path: 'dashboard',
         canActivate: [profileGuard],
