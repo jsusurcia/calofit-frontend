@@ -85,8 +85,6 @@ interface PerfilResponse {
                 <lucide-angular [img]="MailIcon" [size]="14" />
                 {{ perfil()!.email }}
               </span>
-              <span class="text-gray-300 hidden sm:inline">•</span>
-              <span class="font-semibold text-gray-700">ID: {{ perfil()!.id }}</span>
             </div>
           </div>
 
