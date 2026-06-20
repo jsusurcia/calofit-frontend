@@ -1,13 +1,43 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterModule, RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { LucideAngularModule, Flame, LayoutDashboard, Activity, LogOut, UtensilsCrossed, MessageSquare, User, CreditCard } from 'lucide-angular';
+import { LucideAngularModule, Flame, LayoutDashboard, Activity, LogOut, UtensilsCrossed, MessageSquare, User, CreditCard, ClipboardList } from 'lucide-angular';
+import { filter, Subscription } from 'rxjs';
+
+const NAV_COUNT_KEY = 'calofit_nav_count';
+const SURVEY_DONE_KEY = 'calofit_survey_done';
+const SURVEY_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSenEP-LrQnc1ElRS27ioHwwfPVZ8iiKz7-yZlmfEKYgto8Vdw/viewform?usp=dialog';
+const NAV_THRESHOLD = 5;
 
 @Component({
   selector: 'app-cliente-layout',
   imports: [CommonModule, RouterModule, RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule],
   template: `
+    <!-- Survey Gate Modal -->
+    @if (showSurveyModal()) {
+      <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 flex flex-col items-center text-center gap-5">
+          <div class="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center">
+            <lucide-angular [img]="ClipboardIcon" [size]="32" class="text-primary-600" />
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">¡Tu opinión nos importa!</h2>
+            <p class="text-gray-500 text-sm leading-relaxed">
+              Antes de continuar, nos gustaría conocer tu experiencia con Calofit hasta ahora. Solo toma un minuto.
+            </p>
+          </div>
+          <button
+            (click)="openSurvey()"
+            class="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors cursor-pointer text-sm"
+          >
+            Responder encuesta
+          </button>
+          <p class="text-xs text-gray-400">Debes responder la encuesta para seguir usando la app.</p>
+        </div>
+      </div>
+    }
+
     <!-- Mobile backdrop -->
     @if (sidebarOpen()) {
       <div
@@ -106,15 +136,19 @@ import { LucideAngularModule, Flame, LayoutDashboard, Activity, LogOut, Utensils
     }
   `]
 })
-export class ClienteLayoutComponent {
+export class ClienteLayoutComponent implements OnInit, OnDestroy {
   readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
   readonly sidebarOpen = signal(false);
+  readonly showSurveyModal = signal(false);
 
   readonly FlameIcon = Flame;
   readonly LogOutIcon = LogOut;
-
+  readonly ClipboardIcon = ClipboardList;
   readonly UtensilsCrossedIcon = UtensilsCrossed;
   readonly UserIcon = User;
+
+  private routerSub?: Subscription;
 
   readonly navLinks = [
     { path: '/cliente/dashboard', icon: LayoutDashboard, label: 'Inicio', exact: true },
@@ -129,6 +163,31 @@ export class ClienteLayoutComponent {
     const parts = name.trim().split(/\s+/);
     return parts.map(p => p[0]?.toUpperCase()).slice(0, 2).join('');
   };
+
+  ngOnInit(): void {
+    if (localStorage.getItem(SURVEY_DONE_KEY)) return;
+
+    this.routerSub = this.router.events
+      .pipe(filter(e => e instanceof NavigationEnd))
+      .subscribe(() => {
+        const count = Number(localStorage.getItem(NAV_COUNT_KEY) ?? 0) + 1;
+        localStorage.setItem(NAV_COUNT_KEY, String(count));
+        if (count >= NAV_THRESHOLD) {
+          this.showSurveyModal.set(true);
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.routerSub?.unsubscribe();
+  }
+
+  openSurvey(): void {
+    window.open(SURVEY_URL, '_blank');
+    localStorage.setItem(SURVEY_DONE_KEY, '1');
+    this.showSurveyModal.set(false);
+    this.routerSub?.unsubscribe();
+  }
 
   logout(): void {
     this.auth.logout();
