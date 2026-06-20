@@ -58,6 +58,7 @@ interface ResumenDiario {
     grasas_objetivo_g: number;
   };
   ai_insight: string;
+  comidas_registradas?: any[];
 }
 
 @Component({
@@ -100,77 +101,120 @@ interface ResumenDiario {
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
               <!-- Calorías -->
-              <div class="flex flex-col">
-                <div class="flex justify-between mb-1 text-sm">
-                  <span class="font-medium text-gray-700">Calorías</span>
-                  <span class="text-gray-500">{{ resumenDiario()!.resumen.calorias_consumidas | number:'1.0-0' }} / {{ resumenDiario()!.plan_nutricional.calorias_objetivo | number:'1.0-0' }} kcal</span>
+              <div class="flex flex-col items-center">
+                <div class="relative w-28 h-28 flex items-center justify-center">
+                  <svg class="w-full h-full transform -rotate-90">
+                    <circle cx="56" cy="56" r="48" stroke="currentColor" stroke-width="10" fill="transparent" class="text-gray-100" />
+                    <circle cx="56" cy="56" r="48" stroke="currentColor" stroke-width="10" fill="transparent"
+                            [attr.stroke-dasharray]="getDashArray(48)"
+                            [attr.stroke-dashoffset]="getDashOffset(resumenDiario()!.resumen.calorias_consumidas, resumenDiario()!.plan_nutricional.calorias_objetivo, 48)"
+                            class="text-primary-500 transition-all duration-1000 ease-out" />
+                  </svg>
+                  <div class="absolute flex flex-col items-center justify-center text-center">
+                    <span class="text-xl font-bold text-gray-800">{{ resumenDiario()!.resumen.calorias_consumidas | number:'1.0-0' }}</span>
+                    <span class="text-[10px] text-gray-500 uppercase tracking-wider">de {{ resumenDiario()!.plan_nutricional.calorias_objetivo | number:'1.0-0' }}</span>
+                  </div>
                 </div>
-                <div class="w-full bg-gray-100 rounded-full h-2.5">
-                  <div class="bg-primary-500 h-2.5 rounded-full transition-all duration-500" [style.width.%]="(resumenDiario()!.resumen.calorias_consumidas / resumenDiario()!.plan_nutricional.calorias_objetivo) * 100 | number:'1.0-0'"></div>
-                </div>
+                <span class="mt-3 font-medium text-gray-700 text-sm">Calorías</span>
               </div>
 
               <!-- Proteínas -->
-              <div class="flex flex-col">
-                <div class="flex justify-between mb-1 text-sm">
-                  <span class="font-medium text-gray-700">Proteínas</span>
-                  <span class="text-gray-500">{{ resumenDiario()!.resumen.proteinas_consumidas | number:'1.0-0' }} / {{ resumenDiario()!.plan_nutricional.proteinas_objetivo_g | number:'1.0-0' }}g</span>
+              <div class="flex flex-col items-center">
+                <div class="relative w-28 h-28 flex items-center justify-center">
+                  <svg class="w-full h-full transform -rotate-90">
+                    <circle cx="56" cy="56" r="48" stroke="currentColor" stroke-width="10" fill="transparent" class="text-gray-100" />
+                    <circle cx="56" cy="56" r="48" stroke="currentColor" stroke-width="10" fill="transparent"
+                            [attr.stroke-dasharray]="getDashArray(48)"
+                            [attr.stroke-dashoffset]="getDashOffset(resumenDiario()!.resumen.proteinas_consumidas, resumenDiario()!.plan_nutricional.proteinas_objetivo_g, 48)"
+                            class="text-blue-500 transition-all duration-1000 ease-out" />
+                  </svg>
+                  <div class="absolute flex flex-col items-center justify-center text-center">
+                    <span class="text-xl font-bold text-gray-800">{{ resumenDiario()!.resumen.proteinas_consumidas | number:'1.0-0' }}g</span>
+                    <span class="text-[10px] text-gray-500 uppercase tracking-wider">de {{ resumenDiario()!.plan_nutricional.proteinas_objetivo_g | number:'1.0-0' }}g</span>
+                  </div>
                 </div>
-                <div class="w-full bg-gray-100 rounded-full h-2.5">
-                  <div class="bg-blue-500 h-2.5 rounded-full transition-all duration-500" [style.width.%]="(resumenDiario()!.resumen.proteinas_consumidas / resumenDiario()!.plan_nutricional.proteinas_objetivo_g) * 100 | number:'1.0-0'"></div>
-                </div>
+                <span class="mt-3 font-medium text-gray-700 text-sm">Proteínas</span>
               </div>
 
               <!-- Carbohidratos -->
-              <div class="flex flex-col">
-                <div class="flex justify-between mb-1 text-sm">
-                  <span class="font-medium text-gray-700">Carbohidratos</span>
-                  <span class="text-gray-500">{{ resumenDiario()!.resumen.carbohidratos_consumidos | number:'1.0-0' }} / {{ resumenDiario()!.plan_nutricional.carbohidratos_objetivo_g | number:'1.0-0' }}g</span>
+              <div class="flex flex-col items-center">
+                <div class="relative w-28 h-28 flex items-center justify-center">
+                  <svg class="w-full h-full transform -rotate-90">
+                    <circle cx="56" cy="56" r="48" stroke="currentColor" stroke-width="10" fill="transparent" class="text-gray-100" />
+                    <circle cx="56" cy="56" r="48" stroke="currentColor" stroke-width="10" fill="transparent"
+                            [attr.stroke-dasharray]="getDashArray(48)"
+                            [attr.stroke-dashoffset]="getDashOffset(resumenDiario()!.resumen.carbohidratos_consumidos, resumenDiario()!.plan_nutricional.carbohidratos_objetivo_g, 48)"
+                            class="text-yellow-500 transition-all duration-1000 ease-out" />
+                  </svg>
+                  <div class="absolute flex flex-col items-center justify-center text-center">
+                    <span class="text-xl font-bold text-gray-800">{{ resumenDiario()!.resumen.carbohidratos_consumidos | number:'1.0-0' }}g</span>
+                    <span class="text-[10px] text-gray-500 uppercase tracking-wider">de {{ resumenDiario()!.plan_nutricional.carbohidratos_objetivo_g | number:'1.0-0' }}g</span>
+                  </div>
                 </div>
-                <div class="w-full bg-gray-100 rounded-full h-2.5">
-                  <div class="bg-yellow-500 h-2.5 rounded-full transition-all duration-500" [style.width.%]="(resumenDiario()!.resumen.carbohidratos_consumidos / resumenDiario()!.plan_nutricional.carbohidratos_objetivo_g) * 100 | number:'1.0-0'"></div>
-                </div>
+                <span class="mt-3 font-medium text-gray-700 text-sm">Carbohidratos</span>
               </div>
 
               <!-- Grasas -->
-              <div class="flex flex-col">
-                <div class="flex justify-between mb-1 text-sm">
-                  <span class="font-medium text-gray-700">Grasas</span>
-                  <span class="text-gray-500">{{ resumenDiario()!.resumen.grasas_consumidas | number:'1.0-0' }} / {{ resumenDiario()!.plan_nutricional.grasas_objetivo_g | number:'1.0-0' }}g</span>
+              <div class="flex flex-col items-center">
+                <div class="relative w-28 h-28 flex items-center justify-center">
+                  <svg class="w-full h-full transform -rotate-90">
+                    <circle cx="56" cy="56" r="48" stroke="currentColor" stroke-width="10" fill="transparent" class="text-gray-100" />
+                    <circle cx="56" cy="56" r="48" stroke="currentColor" stroke-width="10" fill="transparent"
+                            [attr.stroke-dasharray]="getDashArray(48)"
+                            [attr.stroke-dashoffset]="getDashOffset(resumenDiario()!.resumen.grasas_consumidas, resumenDiario()!.plan_nutricional.grasas_objetivo_g, 48)"
+                            class="text-red-500 transition-all duration-1000 ease-out" />
+                  </svg>
+                  <div class="absolute flex flex-col items-center justify-center text-center">
+                    <span class="text-xl font-bold text-gray-800">{{ resumenDiario()!.resumen.grasas_consumidas | number:'1.0-0' }}g</span>
+                    <span class="text-[10px] text-gray-500 uppercase tracking-wider">de {{ resumenDiario()!.plan_nutricional.grasas_objetivo_g | number:'1.0-0' }}g</span>
+                  </div>
                 </div>
-                <div class="w-full bg-gray-100 rounded-full h-2.5">
-                  <div class="bg-red-500 h-2.5 rounded-full transition-all duration-500" [style.width.%]="(resumenDiario()!.resumen.grasas_consumidas / resumenDiario()!.plan_nutricional.grasas_objetivo_g) * 100 | number:'1.0-0'"></div>
-                </div>
+                <span class="mt-3 font-medium text-gray-700 text-sm">Grasas</span>
               </div>
             </div>
           </div>
         }
 
-        <!-- Calorie Trend Chart -->
+        <!-- Planificado vs Consumido hoy -->
         <div class="bg-white rounded-2xl p-5 md:p-6 shadow-sm border border-gray-100 animate-fade-in-up">
           <div class="flex items-center gap-3 mb-5">
             <div class="w-9 h-9 rounded-xl bg-primary-50 flex items-center justify-center text-[#146aff]"><lucide-angular [img]="ActivityIcon" [size]="18" /></div>
             <div>
-              <h3 class="text-sm font-semibold text-gray-800">Tendencia de calorías</h3>
-              <p class="text-xs text-gray-400">Calorías consumidas por día</p>
+              <h3 class="text-lg font-bold text-gray-800">Planificado vs Consumido hoy</h3>
+              <p class="text-xs text-gray-400">Detalle de tus comidas registradas</p>
             </div>
           </div>
-          @if (calorieChartData()) {
-            <div class="h-72">
-              <canvas
-                baseChart
-                [type]="'bar'"
-                [data]="calorieChartData()!"
-                [options]="barChartOptions"
-              ></canvas>
-            </div>
-          } @else {
-            <div class="h-72 flex items-center justify-center text-sm text-gray-400">
-              No hay datos de calorías disponibles
-            </div>
-          }
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            @for (momento of ['Desayuno', 'Almuerzo', 'Cena', 'Snack']; track momento) {
+              <div class="border border-gray-100 rounded-xl p-4 bg-gray-50">
+                <h4 class="font-bold text-gray-800 mb-3 text-sm">{{ momento }}</h4>
+                @if (getComidasPorMomento(momento).length > 0) {
+                  <ul class="space-y-3">
+                    @for (comida of getComidasPorMomento(momento); track comida.id) {
+                      <li class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm flex flex-col gap-1">
+                        <div class="flex justify-between items-start">
+                          <span class="text-sm font-medium text-gray-800">{{ comida.nombre }}</span>
+                          <span class="text-xs text-primary-600 font-bold bg-primary-50 px-2 py-0.5 rounded-full">{{ comida.macros.calorias }} kcal</span>
+                        </div>
+                        <div class="flex gap-3 text-[10px] text-gray-500 font-medium">
+                          <span>P: {{ comida.macros.proteinas }}g</span>
+                          <span>C: {{ comida.macros.carbohidratos }}g</span>
+                          <span>G: {{ comida.macros.grasas }}g</span>
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <div class="text-center py-4 bg-white rounded-lg border border-gray-100 border-dashed">
+                    <p class="text-xs text-gray-400">Aún no has registrado nada</p>
+                  </div>
+                }
+              </div>
+            }
+          </div>
         </div>
 
         <!-- Imagen Decorativa (Perezoso) -->
@@ -201,6 +245,22 @@ export class BalanceComponent {
   readonly error = signal<string | null>(null);
   readonly calorieChartData = signal<any>(null);
   readonly resumenDiario = signal<ResumenDiario | null>(null);
+
+  getDashArray(radius: number = 48) {
+    return 2 * Math.PI * radius;
+  }
+
+  getDashOffset(consumido: number, objetivo: number, radius: number = 48) {
+    if (!objetivo || objetivo <= 0) return this.getDashArray(radius);
+    const pct = Math.min(consumido / objetivo, 1);
+    return this.getDashArray(radius) * (1 - pct);
+  }
+
+  getComidasPorMomento(momento: string) {
+    const r = this.resumenDiario();
+    if (!r || !r.comidas_registradas) return [];
+    return r.comidas_registradas.filter(c => c.momento.toLowerCase() === momento.toLowerCase() || (momento.toLowerCase() === 'snack' && c.momento.toLowerCase() === 'merienda'));
+  }
 
   readonly barChartOptions: any = {
     responsive: true,

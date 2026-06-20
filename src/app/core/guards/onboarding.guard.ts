@@ -13,7 +13,7 @@ export const onboardingGuard: CanActivateFn = () => {
   }
 
   if (user.is_profile_complete) {
-    router.navigate(['/cliente/dashboard']);
+    router.navigate(['/cliente/plan-semanal']);
     return false;
   }
 

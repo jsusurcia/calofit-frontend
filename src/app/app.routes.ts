@@ -39,9 +39,9 @@ export const routes: Routes = [
         (m) => m.ClienteLayoutComponent
       ),
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: '', redirectTo: 'plan-semanal', pathMatch: 'full' },
       {
-        path: 'dashboard',
+        path: 'plan-semanal',
         canActivate: [profileGuard],
         loadComponent: () =>
           import('./features/cliente/dashboard/dashboard.component').then(

@@ -151,7 +151,7 @@ export class ClienteLayoutComponent implements OnInit, OnDestroy {
   private routerSub?: Subscription;
 
   readonly navLinks = [
-    { path: '/cliente/dashboard', icon: LayoutDashboard, label: 'Inicio', exact: true },
+    { path: '/cliente/plan-semanal', icon: LayoutDashboard, label: 'Plan Semanal', exact: true },
     { path: '/cliente/chat', icon: MessageSquare, label: 'CaloCoach', exact: false },
     { path: '/cliente/balance', icon: Activity, label: 'Balance', exact: false },
     { path: '/cliente/perfil', icon: User, label: 'Perfil', exact: false },

@@ -80,7 +80,7 @@ export class AuthService {
     if (!user) return '/login';
 
     if (user.type === 'client') {
-      return user.is_profile_complete ? '/cliente/dashboard' : '/cliente/onboarding';
+      return user.is_profile_complete ? '/cliente/plan-semanal' : '/cliente/onboarding';
     }
 
     if (user.type === 'staff' && user.role === 'admin') {
