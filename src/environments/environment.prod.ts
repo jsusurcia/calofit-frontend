@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://calofitbackendmarketing-production.up.railway.app',
+  apiUrl: 'https://calofit-backend-4np2.onrender.com',
 };
