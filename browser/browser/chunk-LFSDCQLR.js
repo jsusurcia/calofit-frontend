@@ -1,1 +1,0 @@
-import{K as t,g as r}from"./chunk-TPQYYXXQ.js";var o=class e{_refresh$=new r;refresh$=this._refresh$.asObservable();refresh(){this._refresh$.next()}static \u0275fac=function(a){return new(a||e)};static \u0275prov=t({token:e,factory:e.\u0275fac,providedIn:"root"})};export{o as a};
