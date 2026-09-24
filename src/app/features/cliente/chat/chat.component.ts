@@ -1,16 +1,18 @@
-import { Component, signal, inject, ElementRef, ViewChild, AfterViewChecked, OnInit, effect } from '@angular/core';
+import { Component, signal, inject, ElementRef, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { LucideAngularModule, Mic, Send, Bot, User, MicOff } from 'lucide-angular';
 import { DashboardRefreshService } from '../../../core/services/dashboard-refresh.service';
-import { environment } from '../../../../environments/environment';
+import { ChatService, ChatHistorialItem } from '../../../core/services/chat.service';
 
 interface ChatMessage {
+  id?: number;
   text: string;
   sender: 'user' | 'bot';
   time: Date;
 }
+
+const SCROLL_TOP_THRESHOLD = 80;
 
 @Component({
   selector: 'app-chat',
@@ -27,8 +29,14 @@ interface ChatMessage {
       </div>
 
       <!-- Messages Area -->
-      <div #scrollMe class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
-        @if (messages().length === 0) {
+      <div #scrollMe (scroll)="onScroll()" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+        @if (cargandoHistorial()) {
+          <div class="flex justify-center py-2">
+            <div class="w-5 h-5 border-2 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+          </div>
+        }
+
+        @if (!cargandoInicial() && messages().length === 0) {
           <div class="h-full flex flex-col items-center justify-center text-center opacity-60">
             <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
               <lucide-angular [img]="BotIcon" [size]="32" class="text-gray-500" />
@@ -37,7 +45,7 @@ interface ChatMessage {
             <p class="text-sm text-gray-500 max-w-xs mt-1">Presiona el micrófono y dime "Cambia mi almuerzo de hoy" o pregúntame lo que necesites.</p>
           </div>
         }
-        
+
         @for (msg of messages(); track $index) {
           <div class="flex" [ngClass]="{'justify-end': msg.sender === 'user', 'justify-start': msg.sender === 'bot'}">
             <div class="flex gap-3 max-w-[85%] md:max-w-[75%]" [ngClass]="{'flex-row-reverse': msg.sender === 'user'}">
@@ -75,9 +83,9 @@ interface ChatMessage {
       <!-- Input Area -->
       <div class="bg-white border-t border-gray-200 p-4 shrink-0 pb-safe">
         <div class="flex items-end gap-2 bg-gray-50 rounded-3xl p-2 border border-gray-200 focus-within:border-primary-400 focus-within:bg-white transition-all shadow-sm">
-          
+
           <!-- Botón Micrófono -->
-          <button type="button" 
+          <button type="button"
             (click)="toggleRecording()"
             class="shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-colors mb-0.5"
             [ngClass]="isRecording() ? 'bg-red-500 text-white animate-pulse shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'"
@@ -86,7 +94,7 @@ interface ChatMessage {
           </button>
 
           <!-- Input de texto -->
-          <textarea 
+          <textarea
             [(ngModel)]="inputText"
             (keydown.enter)="onEnter($event)"
             placeholder="Escribe tu mensaje..."
@@ -95,7 +103,7 @@ interface ChatMessage {
           ></textarea>
 
           <!-- Botón Enviar -->
-          <button 
+          <button
             (click)="sendMessage()"
             [disabled]="!inputText.trim() || loading()"
             class="shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-colors mb-0.5"
@@ -116,10 +124,10 @@ interface ChatMessage {
     .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
   `]
 })
-export class ChatComponent implements AfterViewChecked {
+export class ChatComponent implements OnInit {
   @ViewChild('scrollMe') private myScrollContainer!: ElementRef;
 
-  private http = inject(HttpClient);
+  private chatService = inject(ChatService);
   private refreshService = inject(DashboardRefreshService);
 
   readonly BotIcon = Bot;
@@ -130,48 +138,93 @@ export class ChatComponent implements AfterViewChecked {
 
   messages = signal<ChatMessage[]>([]);
   loading = signal(false);
-  inputText = '';
   isRecording = signal(false);
+  cargandoInicial = signal(true);
+  cargandoHistorial = signal(false);
+  inputText = '';
+
+  private hayMas = false;
 
   private recognition: any;
   private synth = window.speechSynthesis;
 
   constructor() {
     this.initSpeechRecognition();
-    
-    // Save to localStorage whenever messages change
-    effect(() => {
-      const msgs = this.messages();
-      if (msgs.length > 0) {
-        localStorage.setItem('calofit_coach_chat', JSON.stringify(msgs));
+  }
+
+  ngOnInit() {
+    this.cargarHistorialInicial();
+  }
+
+  private cargarHistorialInicial() {
+    this.cargandoInicial.set(true);
+    this.chatService.obtenerHistorial().subscribe({
+      next: (res) => {
+        this.messages.set(res.mensajes.map(this.toChatMessage));
+        this.hayMas = res.hay_mas;
+        this.cargandoInicial.set(false);
+        this.scrollToBottom();
+      },
+      error: () => {
+        this.cargandoInicial.set(false);
       }
     });
   }
 
-  ngOnInit() {
-    // Load from localStorage
-    const saved = localStorage.getItem('calofit_coach_chat');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        this.messages.set(parsed.map((m: any) => ({
-          ...m,
-          time: new Date(m.time)
-        })));
-      } catch (e) {
-        console.error('Error parsing chat history', e);
-      }
+  private toChatMessage(m: ChatHistorialItem): ChatMessage {
+    return {
+      id: m.id,
+      text: m.content,
+      sender: m.role === 'user' ? 'user' : 'bot',
+      time: new Date(m.created_at)
+    };
+  }
+
+  onScroll() {
+    const container = this.myScrollContainer?.nativeElement;
+    if (!container) return;
+    if (container.scrollTop <= SCROLL_TOP_THRESHOLD) {
+      this.cargarMensajesAntiguos();
     }
   }
 
-  ngAfterViewChecked() {
-    this.scrollToBottom();
+  private cargarMensajesAntiguos() {
+    if (!this.hayMas || this.cargandoHistorial()) return;
+
+    const idMasAntiguo = this.messages()[0]?.id;
+    if (idMasAntiguo === undefined) return;
+
+    this.cargandoHistorial.set(true);
+    const container = this.myScrollContainer?.nativeElement;
+    const prevScrollHeight = container?.scrollHeight ?? 0;
+
+    this.chatService.obtenerHistorial(idMasAntiguo).subscribe({
+      next: (res) => {
+        this.messages.update(m => [...res.mensajes.map(this.toChatMessage), ...m]);
+        this.hayMas = res.hay_mas;
+        this.cargandoHistorial.set(false);
+
+        setTimeout(() => {
+          if (container) {
+            container.scrollTop = container.scrollHeight - prevScrollHeight;
+          }
+        });
+      },
+      error: () => {
+        this.cargandoHistorial.set(false);
+      }
+    });
   }
 
   private scrollToBottom(): void {
-    try {
-      this.myScrollContainer.nativeElement.scrollTop = this.myScrollContainer.nativeElement.scrollHeight;
-    } catch(err) { }
+    setTimeout(() => {
+      try {
+        const el = this.myScrollContainer?.nativeElement;
+        if (el) {
+          el.scrollTop = el.scrollHeight;
+        }
+      } catch (err) { }
+    }, 50);
   }
 
   private initSpeechRecognition() {
@@ -196,7 +249,7 @@ export class ChatComponent implements AfterViewChecked {
             interimTranscript += event.results[i][0].transcript;
           }
         }
-        
+
         if (finalTranscript) {
           this.inputText = (this.inputText + ' ' + finalTranscript).trim();
         }
@@ -255,16 +308,18 @@ export class ChatComponent implements AfterViewChecked {
     const newMsg: ChatMessage = { text, sender: 'user', time: new Date() };
     this.messages.update(m => [...m, newMsg]);
     this.loading.set(true);
-    
+    this.scrollToBottom();
+
     // Stop speaking if user types
     if (this.synth) this.synth.cancel();
 
-    this.http.post<any>(`${environment.apiUrl}/chat/mensaje`, { message: text }).subscribe({
+    this.chatService.enviarMensaje(text).subscribe({
       next: (res) => {
         const replyMsg: ChatMessage = { text: res.reply, sender: 'bot', time: new Date() };
         this.messages.update(m => [...m, replyMsg]);
         this.loading.set(false);
-        
+        this.scrollToBottom();
+
         // Speak the reply
         this.speakResponse(res.reply);
 
@@ -277,6 +332,7 @@ export class ChatComponent implements AfterViewChecked {
         const errorMsg: ChatMessage = { text: 'Ocurrió un error al conectarse con el asistente.', sender: 'bot', time: new Date() };
         this.messages.update(m => [...m, errorMsg]);
         this.loading.set(false);
+        this.scrollToBottom();
       }
     });
   }
