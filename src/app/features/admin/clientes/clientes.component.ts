@@ -3,136 +3,161 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { AdminService, ClienteAdmin, CreateClientePayload } from '../../../core/services/admin.service';
-import { LucideAngularModule, TriangleAlert, Users, UserPlus, X } from 'lucide-angular';
+import { LucideAngularModule, TriangleAlert, Users, UserPlus, UserX, UserCheck, X } from 'lucide-angular';
+
+type StatusFilter = 'todos' | 'activos' | 'inactivos' | 'incompleto';
 
 @Component({
   selector: 'app-admin-clientes',
   imports: [CommonModule, FormsModule, LucideAngularModule],
   template: `
-    <div class="animate-fade-in-up">
+    <div class="animate-fade-in-up max-w-7xl mx-auto">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div class="flex items-center gap-3">
-          <h1 class="text-2xl font-bold text-gray-900">Clientes</h1>
-          @if (!loading()) {
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-primary-100 text-primary-700">
-              {{ filteredClientes().length }}
-            </span>
-          }
+        <div>
+          <div class="flex items-center gap-3">
+            <h1 class="text-2xl md:text-3xl font-extrabold text-teal-deep">Clientes</h1>
+            @if (!loading()) {
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-pale text-teal-deep">
+                {{ filteredClientes().length }}
+              </span>
+            }
+          </div>
+          <p class="text-ink-soft mt-1 text-sm">Crea cuentas, revisa perfiles y gestiona el acceso de tus usuarios.</p>
         </div>
         <button (click)="showCreateModal.set(true)"
-          class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#146aff] text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-md shadow-[#146aff]/20 cursor-pointer">
+          class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-mid text-white text-sm font-semibold rounded-xl hover:bg-teal-deep transition-colors shadow-md shadow-teal-mid/20 cursor-pointer">
           <lucide-angular [img]="UserPlusIcon" [size]="16" />
           Nuevo cliente
         </button>
       </div>
 
-      <!-- Search -->
-      <div class="mb-6">
-        <div class="relative max-w-md">
-          <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-          <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)"
-            placeholder="Buscar por nombre o email..."
-            class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
-        </div>
-      </div>
-
-      <!-- Loading -->
-      @if (loading()) {
-        <div class="bg-white rounded-2xl border border-gray-200 p-12 flex flex-col items-center gap-3">
-          <div class="w-10 h-10 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin"></div>
-          <p class="text-sm text-gray-500">Cargando clientes...</p>
-        </div>
-      }
-
-      <!-- Error -->
-      @if (error() && !loading()) {
-        <div class="bg-white rounded-2xl border border-red-200 p-8 text-center">
-          <div class="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-3 text-red-500">
-            <lucide-angular [img]="TriangleAlertIcon" [size]="22" />
+      <div class="bg-white rounded-2xl border border-green-cream shadow-sm overflow-hidden">
+        <!-- Toolbar: search + filters -->
+        <div class="flex flex-col lg:flex-row lg:items-center gap-3 p-4 border-b border-green-cream">
+          <div class="relative w-full lg:max-w-sm">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)"
+              placeholder="Buscar por nombre o correo"
+              class="w-full pl-10 pr-4 py-2.5 border border-green-cream rounded-xl text-sm text-ink placeholder:text-ink-soft/60 bg-cream focus:ring-2 focus:ring-teal-mid/20 focus:border-teal-mid outline-none transition-all">
           </div>
-          <p class="text-red-600 font-medium mb-1">Error al cargar clientes</p>
-          <p class="text-sm text-gray-400 mb-4">{{ error() }}</p>
-          <button (click)="loadClientes()" class="px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-xl hover:bg-primary-600 transition-colors cursor-pointer">
-            Reintentar
-          </button>
+          <div class="flex gap-2 overflow-x-auto lg:ml-auto -mx-1 px-1 pb-1 lg:pb-0">
+            @for (f of filterOptions; track f.key) {
+              <button (click)="statusFilter.set(f.key)"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border whitespace-nowrap transition-colors cursor-pointer"
+                [ngClass]="statusFilter() === f.key
+                  ? 'bg-teal-mid border-teal-mid text-white'
+                  : 'bg-white border-green-cream text-ink-soft hover:bg-cream-2'">
+                {{ f.label }}
+                <span class="px-2 py-0.5 rounded-full text-xs font-semibold"
+                  [ngClass]="statusFilter() === f.key ? 'bg-white/20 text-white' : 'bg-cream-2 text-ink-soft'">
+                  {{ counts()[f.key] }}
+                </span>
+              </button>
+            }
+          </div>
         </div>
-      }
 
-      <!-- Content -->
-      @if (!loading() && !error()) {
-        @if (filteredClientes().length === 0) {
-          <div class="bg-white rounded-2xl border border-gray-200 p-12 text-center">
-            <div class="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-300">
-              <lucide-angular [img]="UsersIcon" [size]="28" />
-            </div>
-            <p class="text-gray-500 font-medium">
-              {{ searchQuery() ? 'Sin resultados para esa búsqueda' : 'No hay clientes registrados' }}
-            </p>
+        <!-- Loading -->
+        @if (loading()) {
+          <div class="p-12 flex flex-col items-center gap-3">
+            <div class="w-10 h-10 border-4 border-green-cream border-t-teal-mid rounded-full animate-spin"></div>
+            <p class="text-sm text-ink-soft">Cargando clientes...</p>
           </div>
         }
 
-        @if (filteredClientes().length > 0) {
-          <!-- Desktop Table -->
-          <div class="hidden md:block bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-            <div class="overflow-x-auto">
+        <!-- Error -->
+        @if (error() && !loading()) {
+          <div class="p-8 text-center">
+            <div class="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-3 text-red-500">
+              <lucide-angular [img]="TriangleAlertIcon" [size]="22" />
+            </div>
+            <p class="text-red-600 font-medium mb-1">Error al cargar clientes</p>
+            <p class="text-sm text-ink-soft mb-4">{{ error() }}</p>
+            <button (click)="loadClientes()" class="px-4 py-2 bg-teal-mid text-white text-sm font-semibold rounded-xl hover:bg-teal-deep transition-colors cursor-pointer">
+              Reintentar
+            </button>
+          </div>
+        }
+
+        <!-- Content -->
+        @if (!loading() && !error()) {
+          @if (filteredClientes().length === 0) {
+            <div class="p-12 text-center">
+              <div class="w-14 h-14 bg-cream-2 rounded-full flex items-center justify-center mx-auto mb-3 text-ink-soft/50">
+                <lucide-angular [img]="UsersIcon" [size]="28" />
+              </div>
+              <p class="text-ink-soft font-medium">
+                {{ searchQuery() || statusFilter() !== 'todos' ? 'Sin resultados para esa búsqueda' : 'No hay clientes registrados' }}
+              </p>
+            </div>
+          }
+
+          @if (filteredClientes().length > 0) {
+            <!-- Desktop Table -->
+            <div class="hidden md:block overflow-x-auto">
               <table class="w-full">
                 <thead>
-                  <tr class="bg-gray-50 border-b border-gray-200">
-                    <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3.5">Nombre</th>
-                    <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3.5">Email</th>
-                    <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3.5">Teléfono</th>
-                    <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3.5">Estado</th>
-                    <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3.5">Perfil</th>
-                    <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3.5">Creación</th>
-                    <th class="text-right text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3.5">Acciones</th>
+                  <tr class="bg-cream border-b border-green-cream">
+                    <th class="text-left text-xs font-semibold text-ink-soft uppercase tracking-wider px-6 py-3.5">Cliente</th>
+                    <th class="text-left text-xs font-semibold text-ink-soft uppercase tracking-wider px-6 py-3.5">Estado</th>
+                    <th class="text-left text-xs font-semibold text-ink-soft uppercase tracking-wider px-6 py-3.5">Perfil</th>
+                    <th class="text-left text-xs font-semibold text-ink-soft uppercase tracking-wider px-6 py-3.5">Registro</th>
+                    <th class="text-right text-xs font-semibold text-ink-soft uppercase tracking-wider px-6 py-3.5">Acciones</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
+                <tbody class="divide-y divide-green-cream">
                   @for (c of filteredClientes(); track c.id) {
-                    <tr class="hover:bg-gray-50/50 transition-colors">
-                      <td class="px-6 py-4">
+                    <tr class="hover:bg-cream/70 transition-colors">
+                      <td class="px-6 py-3.5">
                         <div class="flex items-center gap-3">
-                          <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                            <span class="text-primary-700 font-bold text-xs">{{ (c.nombre || '?').charAt(0).toUpperCase() }}</span>
+                          <div class="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
+                               [ngClass]="fullName(c) ? 'bg-green-pale text-teal-deep' : 'bg-cream-2 text-ink-soft'">
+                            {{ initials(c) }}
                           </div>
-                          <span class="text-sm font-medium text-gray-900">{{ c.nombre }} {{ c.apellido }}</span>
+                          <div class="flex flex-col min-w-0">
+                            <span class="text-sm font-semibold" [ngClass]="fullName(c) ? 'text-ink' : 'text-ink-soft'">
+                              {{ fullName(c) || 'Sin nombre aún' }}
+                            </span>
+                            <span class="text-xs text-ink-soft">{{ c.email }}</span>
+                          </div>
                         </div>
                       </td>
-                      <td class="px-6 py-4 text-sm text-gray-500">{{ c.email }}</td>
-                      <td class="px-6 py-4 text-sm text-gray-500">{{ c.telefono || '—' }}</td>
-                      <td class="px-6 py-4">
+                      <td class="px-6 py-3.5">
                         @if (c.is_active) {
-                          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Activo
+                          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-pale text-teal-deep">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-leaf"></span>Activo
                           </span>
                         } @else {
-                          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
                             <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Inactivo
                           </span>
                         }
                       </td>
-                      <td class="px-6 py-4">
+                      <td class="px-6 py-3.5">
                         @if (c.is_profile_complete) {
-                          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Completo</span>
+                          <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-green-pale text-teal-deep">Completo</span>
                         } @else {
-                          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">Incompleto</span>
+                          <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Incompleto</span>
                         }
                       </td>
-                      <td class="px-6 py-4 text-xs text-gray-400">{{ c.fecha_creacion | date:'dd/MM/yyyy' }}</td>
-                      <td class="px-6 py-4 text-right">
-                        <div class="flex items-center justify-end gap-1">
+                      <td class="px-6 py-3.5 text-sm text-ink-soft">{{ c.fecha_creacion | date:'dd/MM/yyyy' }}</td>
+                      <td class="px-6 py-3.5">
+                        <div class="flex items-center justify-end gap-2">
                           <button (click)="viewDetail(c)"
-                            class="px-3 py-1.5 text-xs font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors cursor-pointer">
-                            Ver
+                            class="px-4 py-2 text-sm font-medium text-teal-mid bg-white border border-green-cream hover:bg-cream-2 rounded-xl transition-colors cursor-pointer whitespace-nowrap">
+                            Ver detalle
                           </button>
-                          <button (click)="deleteTargetId.set(c.id)"
-                            class="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer" title="Eliminar">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
+                          <button (click)="statusTargetId.set(c.id)"
+                            [title]="c.is_active ? 'Deshabilitar' : 'Reactivar'"
+                            [attr.aria-label]="c.is_active ? 'Deshabilitar cliente' : 'Reactivar cliente'"
+                            class="w-10 h-10 flex items-center justify-center border rounded-xl transition-colors cursor-pointer"
+                            [ngClass]="c.is_active
+                              ? 'text-red-700 bg-white border-red-200 hover:bg-red-50'
+                              : 'text-teal-deep bg-green-pale border-green-leaf/40 hover:bg-green-leaf/30'">
+                            <lucide-angular [img]="c.is_active ? UserXIcon : UserCheckIcon" [size]="16" />
                           </button>
                         </div>
                       </td>
@@ -141,76 +166,99 @@ import { LucideAngularModule, TriangleAlert, Users, UserPlus, X } from 'lucide-a
                 </tbody>
               </table>
             </div>
-          </div>
 
-          <!-- Mobile Cards -->
-          <div class="md:hidden space-y-3">
-            @for (c of filteredClientes(); track c.id) {
-              <div class="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
-                <div class="flex items-start justify-between mb-3">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                      <span class="text-primary-700 font-bold text-sm">{{ (c.nombre || '?').charAt(0).toUpperCase() }}</span>
+            <!-- Mobile Cards -->
+            <div class="md:hidden divide-y divide-green-cream">
+              @for (c of filteredClientes(); track c.id) {
+                <div class="p-4">
+                  <div class="flex items-start justify-between gap-2 mb-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                      <div class="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
+                           [ngClass]="fullName(c) ? 'bg-green-pale text-teal-deep' : 'bg-cream-2 text-ink-soft'">
+                        {{ initials(c) }}
+                      </div>
+                      <div class="min-w-0">
+                        <p class="text-sm font-semibold truncate" [ngClass]="fullName(c) ? 'text-ink' : 'text-ink-soft'">
+                          {{ fullName(c) || 'Sin nombre aún' }}
+                        </p>
+                        <p class="text-xs text-ink-soft truncate">{{ c.email }}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p class="text-sm font-semibold text-gray-900">{{ c.nombre }} {{ c.apellido }}</p>
-                      <p class="text-xs text-gray-500">{{ c.email }}</p>
+                    @if (c.is_active) {
+                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-pale text-teal-deep">Activo</span>
+                    } @else {
+                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">Inactivo</span>
+                    }
+                  </div>
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold"
+                          [ngClass]="c.is_profile_complete ? 'bg-green-pale text-teal-deep' : 'bg-amber-100 text-amber-800'">
+                      {{ c.is_profile_complete ? 'Perfil completo' : 'Perfil incompleto' }}
+                    </span>
+                    <div class="flex items-center gap-2">
+                      <button (click)="viewDetail(c)" class="px-3 py-1.5 text-xs font-medium text-teal-mid bg-white border border-green-cream hover:bg-cream-2 rounded-lg transition-colors cursor-pointer">Ver detalle</button>
+                      <button (click)="statusTargetId.set(c.id)" class="px-3 py-1.5 text-xs font-medium border rounded-lg transition-colors cursor-pointer"
+                        [ngClass]="c.is_active
+                          ? 'text-red-700 bg-white border-red-200 hover:bg-red-50'
+                          : 'text-teal-deep bg-green-pale border-green-leaf/40 hover:bg-green-leaf/30'">
+                        {{ c.is_active ? 'Deshabilitar' : 'Reactivar' }}
+                      </button>
                     </div>
                   </div>
-                  @if (c.is_active) {
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700">Activo</span>
-                  } @else {
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">Inactivo</span>
-                  }
                 </div>
-                <div class="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
-                  <button (click)="viewDetail(c)" class="px-3 py-1.5 text-xs font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors cursor-pointer">Ver</button>
-                  <button (click)="deleteTargetId.set(c.id)" class="px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer">Eliminar</button>
-                </div>
-              </div>
-            }
-          </div>
+              }
+            </div>
+          }
         }
-      }
+      </div>
     </div>
 
     <!-- Create Modal -->
     @if (showCreateModal()) {
-      <div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" (click)="closeCreate()">
-        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl animate-fade-in-up" (click)="$event.stopPropagation()">
-          <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-            <h3 class="text-lg font-bold text-gray-900">Nuevo cliente</h3>
-            <button (click)="closeCreate()" class="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-              <lucide-angular [img]="XIcon" [size]="18" />
+      <div class="fixed inset-0 bg-teal-deep/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" (click)="closeCreate()">
+        <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-fade-in-up p-6 sm:p-7" (click)="$event.stopPropagation()">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="w-12 h-12 shrink-0 bg-cyan-ring/20 rounded-2xl flex items-center justify-center text-teal-mid">
+              <lucide-angular [img]="UserPlusIcon" [size]="22" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-xl font-extrabold text-teal-deep">Nuevo cliente</h3>
+              <p class="text-sm text-ink-soft mt-0.5">Comparte estos datos para su primer ingreso.</p>
+            </div>
+            <button (click)="closeCreate()" aria-label="Cerrar" class="p-1.5 rounded-lg text-ink hover:bg-cream-2 transition-colors cursor-pointer">
+              <lucide-angular [img]="XIcon" [size]="20" />
             </button>
           </div>
-          <div class="p-6 space-y-4">
+
+          <div class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Email <span class="text-red-400">*</span></label>
-              <input type="email" [(ngModel)]="form.email" placeholder="juan@ejemplo.com"
-                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-[#146aff]/20 focus:border-[#146aff] outline-none transition-all" />
+              <label class="block text-sm font-semibold text-ink mb-1.5">Correo electrónico <span class="text-red-700">*</span></label>
+              <input type="email" [(ngModel)]="form.email" placeholder="cliente@correo.com"
+                class="w-full px-4 py-3 rounded-2xl border border-green-cream bg-cream text-sm text-ink placeholder:text-ink-soft/60 focus:ring-2 focus:ring-teal-mid/20 focus:border-teal-mid outline-none transition-all" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Contraseña <span class="text-red-400">*</span></label>
-              <input type="password" [(ngModel)]="form.password" placeholder="Mínimo 6 caracteres"
-                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-[#146aff]/20 focus:border-[#146aff] outline-none transition-all" />
+              <label class="block text-sm font-semibold text-ink mb-1.5">Contraseña temporal <span class="text-red-700">*</span></label>
+              <input type="password" [(ngModel)]="form.password" placeholder="Mínimo 8 caracteres"
+                class="w-full px-4 py-3 rounded-2xl border border-green-cream bg-cream text-sm text-ink placeholder:text-ink-soft/60 focus:ring-2 focus:ring-teal-mid/20 focus:border-teal-mid outline-none transition-all" />
+              <p class="mt-1.5 text-xs text-ink-soft">El cliente deberá cambiarla en su primer ingreso.</p>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Teléfono</label>
-              <input type="tel" [(ngModel)]="form.telefono" placeholder="999 999 999 (opcional)"
-                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-[#146aff]/20 focus:border-[#146aff] outline-none transition-all" />
+              <label class="block text-sm font-semibold text-ink mb-1.5">Teléfono <span class="font-normal text-ink-soft">(opcional)</span></label>
+              <input type="tel" [(ngModel)]="form.telefono" placeholder="999 999 999"
+                class="w-full px-4 py-3 rounded-2xl border border-green-cream bg-cream text-sm text-ink placeholder:text-ink-soft/60 focus:ring-2 focus:ring-teal-mid/20 focus:border-teal-mid outline-none transition-all" />
             </div>
             @if (createError()) {
-              <p class="text-xs text-red-500">{{ createError() }}</p>
+              <p class="text-xs text-red-700">{{ createError() }}</p>
             }
           </div>
-          <div class="px-6 pb-6 flex gap-3">
+
+          <div class="mt-6 flex gap-3">
             <button (click)="closeCreate()"
-              class="flex-1 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors cursor-pointer">
+              class="flex-1 py-3 text-sm font-semibold text-ink-soft bg-white border border-green-cream hover:bg-cream-2 rounded-2xl transition-colors cursor-pointer">
               Cancelar
             </button>
             <button (click)="createCliente()" [disabled]="creating()"
-              class="flex-1 py-2.5 text-sm font-semibold text-white bg-[#146aff] hover:bg-blue-700 disabled:opacity-50 rounded-xl transition-colors cursor-pointer">
+              class="flex-1 py-3 text-sm font-bold text-white bg-teal-mid hover:bg-teal-deep disabled:opacity-50 rounded-2xl transition-colors cursor-pointer">
               @if (creating()) {
                 <span class="flex items-center justify-center gap-2">
                   <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -227,73 +275,95 @@ import { LucideAngularModule, TriangleAlert, Users, UserPlus, X } from 'lucide-a
 
     <!-- Detail Modal -->
     @if (detailCliente()) {
-      <div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" (click)="detailCliente.set(null)">
-        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in-up" (click)="$event.stopPropagation()">
-          <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-            <h3 class="text-lg font-bold text-gray-900">Detalle del cliente</h3>
-            <button (click)="detailCliente.set(null)" class="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-              <lucide-angular [img]="XIcon" [size]="18" />
+      <div class="fixed inset-0 bg-teal-deep/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" (click)="detailCliente.set(null)">
+        <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-fade-in-up p-6 sm:p-7" (click)="$event.stopPropagation()">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="w-14 h-14 shrink-0 rounded-full flex items-center justify-center text-lg font-bold"
+                 [ngClass]="fullName(detailCliente()!) ? 'bg-green-pale text-teal-deep' : 'bg-cream-2 text-ink-soft'">
+              {{ initials(detailCliente()!) }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-xl font-extrabold truncate" [ngClass]="fullName(detailCliente()!) ? 'text-teal-deep' : 'text-ink-soft'">
+                {{ fullName(detailCliente()!) || 'Sin nombre aún' }}
+              </h3>
+              <p class="text-sm text-ink-soft truncate">{{ detailCliente()!.email }}</p>
+            </div>
+            <button (click)="detailCliente.set(null)" aria-label="Cerrar" class="p-1.5 rounded-lg text-ink hover:bg-cream-2 transition-colors cursor-pointer">
+              <lucide-angular [img]="XIcon" [size]="20" />
             </button>
           </div>
-          <div class="p-6 space-y-3">
-            <div class="flex items-center gap-4">
-              <div class="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center">
-                <span class="text-primary-700 font-bold text-xl">{{ (detailCliente()!.nombre || '?').charAt(0).toUpperCase() }}</span>
-              </div>
-              <div>
-                <p class="font-semibold text-gray-900">{{ detailCliente()!.nombre }} {{ detailCliente()!.apellido }}</p>
-                <p class="text-sm text-gray-400">{{ detailCliente()!.email }}</p>
-              </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3 pt-2">
-              <div class="bg-gray-50 rounded-xl p-3">
-                <p class="text-xs text-gray-400 mb-1">Estado cuenta</p>
-                @if (detailCliente()!.is_active) {
-                  <span class="text-sm font-semibold text-emerald-600">Activo</span>
-                } @else {
-                  <span class="text-sm font-semibold text-red-500">Inactivo</span>
-                }
-              </div>
-              <div class="bg-gray-50 rounded-xl p-3">
-                <p class="text-xs text-gray-400 mb-1">Perfil</p>
-                <span class="text-sm font-semibold" [ngClass]="detailCliente()!.is_profile_complete ? 'text-blue-600' : 'text-gray-500'">
-                  {{ detailCliente()!.is_profile_complete ? 'Completo' : 'Incompleto' }}
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-cream border border-green-cream rounded-2xl p-4">
+              <p class="text-xs font-medium text-ink-soft mb-2">Estado de la cuenta</p>
+              @if (detailCliente()!.is_active) {
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-pale text-teal-deep">
+                  <span class="w-1.5 h-1.5 rounded-full bg-green-leaf"></span>Activo
                 </span>
-              </div>
-              <div class="bg-gray-50 rounded-xl p-3 col-span-2">
-                <p class="text-xs text-gray-400 mb-1">Teléfono</p>
-                <p class="text-sm font-medium text-gray-700">{{ detailCliente()!.telefono || '—' }}</p>
-              </div>
-              <div class="bg-gray-50 rounded-xl p-3 col-span-2">
-                <p class="text-xs text-gray-400 mb-1">Fecha de registro</p>
-                <p class="text-sm font-medium text-gray-700">{{ detailCliente()!.fecha_creacion | date:'dd/MM/yyyy HH:mm' }}</p>
-              </div>
+              } @else {
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                  <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Inactivo
+                </span>
+              }
+            </div>
+            <div class="bg-cream border border-green-cream rounded-2xl p-4">
+              <p class="text-xs font-medium text-ink-soft mb-2">Perfil</p>
+              <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold"
+                    [ngClass]="detailCliente()!.is_profile_complete ? 'bg-green-pale text-teal-deep' : 'bg-amber-100 text-amber-800'">
+                {{ detailCliente()!.is_profile_complete ? 'Completo' : 'Incompleto' }}
+              </span>
+            </div>
+            <div class="bg-cream border border-green-cream rounded-2xl p-4">
+              <p class="text-xs font-medium text-ink-soft mb-2">Teléfono</p>
+              <p class="text-sm" [ngClass]="detailCliente()!.telefono ? 'font-semibold text-ink' : 'text-ink-soft'">
+                {{ detailCliente()!.telefono || 'No registrado' }}
+              </p>
+            </div>
+            <div class="bg-cream border border-green-cream rounded-2xl p-4">
+              <p class="text-xs font-medium text-ink-soft mb-2">Fecha de registro</p>
+              <p class="text-sm font-semibold text-ink">{{ detailCliente()!.fecha_creacion | date:'dd/MM/yyyy · HH:mm' }}</p>
             </div>
           </div>
+
+          <button (click)="detailCliente.set(null)"
+            class="mt-4 w-full py-3 text-sm font-semibold text-teal-mid bg-white border border-green-cream hover:bg-cream-2 rounded-2xl transition-colors cursor-pointer">
+            Cerrar
+          </button>
         </div>
       </div>
     }
 
-    <!-- Delete Confirm Modal -->
-    @if (deleteTargetId() !== null) {
-      <div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" (click)="deleteTargetId.set(null)">
-        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in-up p-6 text-center" (click)="$event.stopPropagation()">
-          <div class="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <lucide-angular [img]="TriangleAlertIcon" [size]="26" class="text-red-500" />
+    <!-- Disable / Reactivate Confirm Modal -->
+    @if (statusTarget(); as target) {
+      <div class="fixed inset-0 bg-teal-deep/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" (click)="statusTargetId.set(null)">
+        <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-fade-in-up p-6 sm:p-7 text-center" (click)="$event.stopPropagation()">
+          <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+               [ngClass]="target.is_active ? 'bg-red-100 text-red-700' : 'bg-green-pale text-teal-deep'">
+            <lucide-angular [img]="target.is_active ? UserXIcon : UserCheckIcon" [size]="28" />
           </div>
-          <h3 class="text-lg font-bold text-gray-900 mb-2">Confirmar eliminación</h3>
-          <p class="text-sm text-gray-500 mb-6">
-            ¿Eliminar a <span class="font-semibold text-gray-700">{{ getClienteName(deleteTargetId()!) }}</span>?
-            Esta acción no se puede deshacer.
+          <h3 class="text-xl font-extrabold text-teal-deep mb-2">
+            {{ target.is_active ? '¿Deshabilitar' : '¿Reactivar' }} a {{ displayName(target) }}?
+          </h3>
+          <p class="text-sm text-ink-soft mb-6">
+            @if (target.is_active) {
+              Perderá el acceso a Calofit hasta que lo reactives. Sus datos se conservan.
+            } @else {
+              Recuperará el acceso a Calofit con su cuenta actual.
+            }
           </p>
           <div class="flex gap-3">
-            <button (click)="deleteTargetId.set(null)"
-              class="flex-1 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors cursor-pointer">
+            <button (click)="statusTargetId.set(null)"
+              class="flex-1 py-3 text-sm font-semibold text-ink-soft bg-white border border-green-cream hover:bg-cream-2 rounded-2xl transition-colors cursor-pointer">
               Cancelar
             </button>
-            <button (click)="confirmDelete()" [disabled]="deleting()"
-              class="flex-1 py-2.5 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 rounded-xl transition-colors cursor-pointer">
-              {{ deleting() ? 'Eliminando...' : 'Eliminar' }}
+            <button (click)="confirmStatusChange()" [disabled]="updatingStatus()"
+              class="flex-1 py-3 text-sm font-bold text-white disabled:opacity-50 rounded-2xl transition-colors cursor-pointer"
+              [ngClass]="target.is_active ? 'bg-red-700 hover:bg-red-800' : 'bg-teal-mid hover:bg-teal-deep'">
+              @if (updatingStatus()) {
+                {{ target.is_active ? 'Deshabilitando...' : 'Reactivando...' }}
+              } @else {
+                {{ target.is_active ? 'Sí, deshabilitar' : 'Sí, reactivar' }}
+              }
             </button>
           </div>
         </div>
@@ -307,6 +377,8 @@ export class AdminClientesComponent {
   private toastr = inject(ToastrService);
 
   readonly TriangleAlertIcon = TriangleAlert;
+  readonly UserXIcon = UserX;
+  readonly UserCheckIcon = UserCheck;
   readonly UsersIcon = Users;
   readonly UserPlusIcon = UserPlus;
   readonly XIcon = X;
@@ -315,8 +387,10 @@ export class AdminClientesComponent {
   loading = signal(false);
   error = signal<string | null>(null);
   searchQuery = signal('');
-  deleteTargetId = signal<number | null>(null);
-  deleting = signal(false);
+  statusFilter = signal<StatusFilter>('todos');
+  statusTargetId = signal<number | null>(null);
+  updatingStatus = signal(false);
+  statusTarget = computed(() => this.clientes().find(c => c.id === this.statusTargetId()) ?? null);
   showCreateModal = signal(false);
   creating = signal(false);
   createError = signal<string | null>(null);
@@ -324,14 +398,34 @@ export class AdminClientesComponent {
 
   form: CreateClientePayload = { email: '', password: '', telefono: '' };
 
+  readonly filterOptions: { key: StatusFilter; label: string }[] = [
+    { key: 'todos', label: 'Todos' },
+    { key: 'activos', label: 'Activos' },
+    { key: 'inactivos', label: 'Inactivos' },
+    { key: 'incompleto', label: 'Perfil incompleto' },
+  ];
+
+  counts = computed<Record<StatusFilter, number>>(() => {
+    const list = this.clientes();
+    return {
+      todos: list.length,
+      activos: list.filter(c => c.is_active).length,
+      inactivos: list.filter(c => !c.is_active).length,
+      incompleto: list.filter(c => !c.is_profile_complete).length,
+    };
+  });
+
   filteredClientes = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
-    const list = this.clientes();
-    if (!q) return list;
-    return list.filter(c =>
-      `${c.nombre} ${c.apellido}`.toLowerCase().includes(q) ||
-      c.email.toLowerCase().includes(q)
-    );
+    const filter = this.statusFilter();
+    return this.clientes().filter(c => {
+      if (filter === 'activos' && !c.is_active) return false;
+      if (filter === 'inactivos' && c.is_active) return false;
+      if (filter === 'incompleto' && c.is_profile_complete) return false;
+      if (!q) return true;
+      return `${c.nombre} ${c.apellido}`.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q);
+    });
   });
 
   constructor() {
@@ -347,9 +441,17 @@ export class AdminClientesComponent {
     });
   }
 
-  getClienteName(id: number): string {
-    const c = this.clientes().find(x => x.id === id);
-    return c ? `${c.nombre} ${c.apellido}` : '';
+  fullName(c: ClienteAdmin): string {
+    return `${c.nombre ?? ''} ${c.apellido ?? ''}`.trim();
+  }
+
+  initials(c: ClienteAdmin): string {
+    const parts = this.fullName(c).split(/\s+/).filter(Boolean);
+    return parts.length ? ((parts[0][0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() : '?';
+  }
+
+  displayName(c: ClienteAdmin): string {
+    return this.fullName(c) || c.email;
   }
 
   viewDetail(c: ClienteAdmin): void {
@@ -365,7 +467,7 @@ export class AdminClientesComponent {
   createCliente(): void {
     this.createError.set(null);
     if (!this.form.email.trim()) { this.createError.set('Email requerido.'); return; }
-    if (!this.form.password || this.form.password.length < 6) { this.createError.set('Contraseña mínimo 6 caracteres.'); return; }
+    if (!this.form.password || this.form.password.length < 8) { this.createError.set('Contraseña mínimo 8 caracteres.'); return; }
 
     const payload: CreateClientePayload = {
       email: this.form.email.trim(),
@@ -388,20 +490,28 @@ export class AdminClientesComponent {
     });
   }
 
-  confirmDelete(): void {
-    const id = this.deleteTargetId();
-    if (id === null) return;
-    this.deleting.set(true);
-    this.adminService.deleteCliente(id).subscribe({
+  confirmStatusChange(): void {
+    const target = this.statusTarget();
+    if (!target) return;
+    const disabling = target.is_active;
+    const request$ = disabling
+      ? this.adminService.deshabilitarCliente(target.id)
+      : this.adminService.reactivarCliente(target.id);
+
+    this.updatingStatus.set(true);
+    request$.subscribe({
       next: () => {
-        this.clientes.update(list => list.filter(c => c.id !== id));
-        this.deleteTargetId.set(null);
-        this.deleting.set(false);
-        this.toastr.success('Cliente eliminado', 'Éxito');
+        this.clientes.update(list => list.map(c => c.id === target.id ? { ...c, is_active: !disabling } : c));
+        this.statusTargetId.set(null);
+        this.updatingStatus.set(false);
+        this.toastr.success(disabling ? 'Cliente deshabilitado' : 'Cliente reactivado', 'Éxito');
       },
       error: (err) => {
-        this.deleting.set(false);
-        this.toastr.error(err?.error?.detail || 'Error al eliminar', 'Error');
+        this.updatingStatus.set(false);
+        this.toastr.error(
+          err?.error?.detail || (disabling ? 'Error al deshabilitar' : 'Error al reactivar'),
+          'Error',
+        );
       },
     });
   }

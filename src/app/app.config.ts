@@ -16,6 +16,8 @@ export const appConfig: ApplicationConfig = {
     provideToastr({
       positionClass: 'toast-top-right',
       timeOut: 4000,
+      // El cursor no pausa ni reinicia el temporizador: la duración es única
+      disableTimeOut: 'extendedTimeOut',
       preventDuplicates: true,
       progressBar: true,
       closeButton: true,

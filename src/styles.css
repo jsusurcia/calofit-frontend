@@ -53,6 +53,39 @@
   --color-danger-700: #b91c1c;
 }
 
+/* ============================
+   Paleta de marca (variables CSS)
+   Uso: var(--teal-deep), o clases Tailwind: bg-teal-deep, text-ink, etc.
+   ============================ */
+
+:root {
+  --teal-deep: #173e40;   /* Fondos oscuros (footer, sidebar), botón primario, texto sobre claro */
+  --teal-mid: #1f6b6b;    /* Color de marca principal, enlaces, borde del logo, íconos activos */
+  --cyan-ring: #5bc7d6;   /* Acento, progreso, anillos, resaltados */
+  --green-leaf: #8fae6e;  /* Verde del perezoso, acento secundario, estados positivos */
+  --green-pale: #d8e6be;  /* Fondos suaves verdes, chips, etiquetas */
+  --green-cream: #f1efd9; /* Rostro del perezoso, pistas de gráficos (track) */
+  --bg-cream: #fbfaf3;    /* Fondo general de la página */
+  --bg-cream-2: #f4f1e4;  /* Fondo de secciones alternas y tarjetas */
+  --ink: #16312f;         /* Texto principal */
+  --ink-soft: #3c5450;    /* Texto secundario */
+  --white: #ffffff;       /* Tarjetas, texto sobre oscuro */
+}
+
+/* Expone la paleta como utilidades de Tailwind (bg-teal-deep, text-ink-soft, ...) */
+@theme inline {
+  --color-teal-deep: var(--teal-deep);
+  --color-teal-mid: var(--teal-mid);
+  --color-cyan-ring: var(--cyan-ring);
+  --color-green-leaf: var(--green-leaf);
+  --color-green-pale: var(--green-pale);
+  --color-green-cream: var(--green-cream);
+  --color-cream: var(--bg-cream);
+  --color-cream-2: var(--bg-cream-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+}
+
 /* Global base */
 html {
   scroll-behavior: smooth;
@@ -62,12 +95,95 @@ body {
   min-height: 100vh;
 }
 
-/* Toastr theme overrides */
+/* Toastr: estilo de notificaciones (base de ngx-toastr + tema Calofit) */
+.toast-container {
+  top: 16px !important;
+  right: 16px !important;
+}
+
 .toast-container .ngx-toastr {
-  border-radius: 12px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  --toast-accent: var(--teal-mid);
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  margin: 0 0 10px;
+  padding: 14px 40px 14px 58px !important;
+  background-color: var(--white) !important;
+  background-image: none !important;
+  color: var(--ink);
+  border: 1px solid var(--green-cream);
+  border-radius: 16px !important;
+  box-shadow: 0 12px 32px -8px rgba(23, 62, 64, 0.25), 0 4px 8px -4px rgba(23, 62, 64, 0.1) !important;
   font-family: 'Inter', sans-serif !important;
-  padding: 14px 20px !important;
+  opacity: 1;
+}
+
+.toast-container .ngx-toastr:hover {
+  box-shadow: 0 16px 36px -8px rgba(23, 62, 64, 0.3), 0 4px 8px -4px rgba(23, 62, 64, 0.1) !important;
+}
+
+/* Ícono circular a la izquierda */
+.toast-container .ngx-toastr::before {
+  content: '';
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background-color: var(--toast-accent);
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 28px;
+  text-align: center;
+}
+
+.toast-container .toast-success { --toast-accent: var(--teal-mid); }
+.toast-container .toast-success::before { content: '✓'; }
+.toast-container .toast-error { --toast-accent: #b91c1c; }
+.toast-container .toast-error::before { content: '✕'; }
+.toast-container .toast-warning { --toast-accent: #d97706; }
+.toast-container .toast-warning::before { content: '!'; }
+.toast-container .toast-info { --toast-accent: var(--cyan-ring); }
+.toast-container .toast-info::before { content: 'i'; color: var(--teal-deep); }
+
+.toast-container .toast-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--teal-deep);
+}
+
+.toast-container .toast-message {
+  margin-top: 2px;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  word-wrap: break-word;
+}
+
+.toast-container .toast-close-button {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  float: none;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ink-soft);
+  text-shadow: none;
+  opacity: 0.7;
+}
+
+.toast-container .toast-close-button:hover,
+.toast-container .toast-close-button:focus {
+  color: var(--teal-deep);
+  opacity: 1;
+}
+
+.toast-container .ngx-toastr .toast-progress {
+  height: 3px;
+  background-color: var(--toast-accent);
+  opacity: 0.6;
 }
 
 /* Custom scrollbar */

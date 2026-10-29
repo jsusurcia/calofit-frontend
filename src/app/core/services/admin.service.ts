@@ -12,6 +12,8 @@ export interface AdminDashboard {
   clientes_activos: number;
   ingresos_mes: number;
   pagos_pendientes: number;
+  /** Pendiente en backend: cantidad de pagos aprobados en el mes actual. */
+  pagos_aprobados_mes?: number;
 }
 
 export interface ClienteAdmin {
@@ -68,8 +70,14 @@ export class AdminService {
     return this.http.post<ClienteAdmin>(`${API}/clientes/admin-crear`, data);
   }
 
-  deleteCliente(id: number): Observable<unknown> {
+  /** Eliminación lógica: el backend marca al cliente como inactivo. */
+  deshabilitarCliente(id: number): Observable<unknown> {
     return this.http.delete(`${API}/admin/clientes/${id}`);
+  }
+
+  /** Pendiente en backend: este endpoint aún no existe. */
+  reactivarCliente(id: number): Observable<unknown> {
+    return this.http.put(`${API}/admin/clientes/${id}/reactivar`, {});
   }
 
   registrarPago(data: RegistrarPagoPayload): Observable<unknown> {

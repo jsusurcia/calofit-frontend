@@ -1,18 +1,9 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import {
-  LucideAngularModule,
-  User,
-  Mail,
-  Activity,
-  Scale,
-  Ruler,
-  Target,
-  Shield,
-  Pencil,
-} from 'lucide-angular';
+import { LucideAngularModule, Activity, Target, Pencil, LogOut } from 'lucide-angular';
+import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../environments/environment';
 
 const API_URL = environment.apiUrl;
@@ -35,235 +26,348 @@ interface PerfilResponse {
   profile_picture_url: string | null;
   is_profile_complete: boolean;
   meal_reminder_time: string;
+  created_at?: string | null;
 }
+
+interface MetaDiaria {
+  calorias: number;
+  proteinas: number;
+  carbohidratos: number;
+  grasas: number;
+}
+
+interface TramoIMC {
+  label: string;
+  desde: number;
+  hasta: number;
+  color: string;
+}
+
+/** Escala visual del IMC: de 15 a 40 kg/m². */
+const IMC_MIN = 15;
+const IMC_MAX = 40;
+const TRAMOS_IMC: TramoIMC[] = [
+  { label: 'Bajo', desde: IMC_MIN, hasta: 18.5, color: 'bg-cream-2' },
+  { label: 'Saludable', desde: 18.5, hasta: 25, color: 'bg-green-pale' },
+  { label: 'Sobrepeso', desde: 25, hasta: 30, color: 'bg-amber-100' },
+  { label: 'Obesidad', desde: 30, hasta: IMC_MAX, color: 'bg-red-100' },
+];
 
 @Component({
   selector: 'app-perfil',
   imports: [CommonModule, RouterLink, LucideAngularModule],
   template: `
-    <div class="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto space-y-8">
+    <div class="p-4 lg:p-8 max-w-7xl mx-auto space-y-5 lg:space-y-6">
 
       <!-- Loading -->
       @if (loading()) {
         <div class="flex items-center justify-center py-20">
           <div class="flex flex-col items-center gap-3">
-            <div class="w-10 h-10 border-3 border-primary-200 border-t-primary-500 rounded-full animate-spin"></div>
-            <p class="text-sm text-gray-400">Cargando perfil...</p>
+            <div class="w-10 h-10 border-4 border-green-cream border-t-teal-mid rounded-full animate-spin"></div>
+            <p class="text-sm text-ink-soft">Cargando perfil...</p>
           </div>
         </div>
       }
 
       <!-- Error -->
       @if (error()) {
-        <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm">
+        <div class="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-sm">
           {{ error() }}
         </div>
       }
 
-      <!-- Contenido -->
-      @if (!loading() && !error() && perfil()) {
+      @if (perfil(); as p) {
+        <!-- Cabecera -->
+        <section class="relative overflow-hidden bg-white rounded-3xl border border-green-cream p-6 lg:p-8 animate-fade-in-up">
+          <div class="absolute -top-24 -right-20 w-[260px] h-[260px] lg:w-[360px] lg:h-[360px] rounded-full border-[14px] lg:border-[18px] border-cyan-ring/20 pointer-events-none" aria-hidden="true"></div>
 
-        <!-- ── Header ── -->
-        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+          <div class="relative flex flex-col items-center text-center lg:flex-row lg:text-left gap-4 lg:gap-6">
+            <div class="w-24 h-24 lg:w-32 lg:h-32 shrink-0 rounded-full bg-green-pale text-teal-deep flex items-center justify-center text-3xl lg:text-5xl font-extrabold">
+              {{ initials() }}
+            </div>
 
-          <!-- Avatar -->
-          <div class="w-24 h-24 rounded-full flex-shrink-0 ring-4 ring-primary-100 overflow-hidden">
-            @if (perfil()!.profile_picture_url) {
-              <img [src]="perfil()!.profile_picture_url" alt="Foto de perfil" class="w-full h-full object-cover" />
-            } @else {
-              <div class="w-full h-full bg-primary-100 flex items-center justify-center text-primary-600 text-3xl font-bold">
-                {{ initials() }}
+            <div class="min-w-0">
+              <h1 class="text-2xl lg:text-4xl font-extrabold text-teal-deep">{{ fullName() }}</h1>
+              <p class="text-ink-soft mt-1 lg:text-lg">
+                {{ p.email }}<span class="lg:hidden"> · {{ edad() }} años</span>
+              </p>
+              <div class="hidden lg:flex flex-wrap gap-2 mt-3">
+                <span class="px-3 py-1 rounded-full bg-cream-2 text-ink text-sm">{{ edad() }} años</span>
+                <span class="px-3 py-1 rounded-full bg-cream-2 text-ink text-sm">{{ generoTexto(p.gender) }}</span>
+                @if (enCalofitDesde(); as desde) {
+                  <span class="px-3 py-1 rounded-full bg-cream-2 text-ink text-sm">En Calofit desde {{ desde }}</span>
+                }
               </div>
+            </div>
+
+            <a routerLink="/cliente/editar-perfil"
+               class="lg:ml-auto shrink-0 inline-flex items-center justify-center gap-2 px-6 py-3 bg-teal-mid text-white font-bold rounded-2xl shadow-lg shadow-teal-mid/25 hover:bg-teal-deep transition-colors">
+              <lucide-angular [img]="PencilIcon" [size]="16" />
+              Editar perfil
+            </a>
+          </div>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6 items-start">
+          <!-- Columna principal -->
+          <div class="lg:col-span-2 space-y-5 lg:space-y-6">
+
+            <!-- Medidas (escritorio) -->
+            <section class="hidden lg:block bg-white rounded-3xl border border-green-cream p-6 lg:p-8">
+              <h2 class="text-xl font-extrabold text-teal-deep">Tus medidas</h2>
+              <div class="mt-5 grid grid-cols-3 gap-4">
+                <div class="rounded-2xl bg-cream border border-green-cream px-5 py-4">
+                  <p class="text-sm text-ink-soft">Peso</p>
+                  <p class="text-3xl font-extrabold text-teal-deep">{{ p.weight }} <span class="text-base font-bold">kg</span></p>
+                </div>
+                <div class="rounded-2xl bg-cream border border-green-cream px-5 py-4">
+                  <p class="text-sm text-ink-soft">Estatura</p>
+                  <p class="text-3xl font-extrabold text-teal-deep">{{ p.height }} <span class="text-base font-bold">cm</span></p>
+                </div>
+                <div class="rounded-2xl bg-cream border border-green-cream px-5 py-4">
+                  <p class="text-sm text-ink-soft">Edad</p>
+                  <p class="text-3xl font-extrabold text-teal-deep">{{ edad() }} <span class="text-base font-bold">años</span></p>
+                </div>
+              </div>
+            </section>
+
+            <!-- Medidas (móvil) -->
+            <div class="lg:hidden grid grid-cols-3 gap-3">
+              <div class="rounded-2xl bg-white border border-green-cream px-4 py-3">
+                <p class="text-xs text-ink-soft">Peso</p>
+                <p class="text-xl font-extrabold text-teal-deep">{{ p.weight }} <span class="text-xs font-bold">kg</span></p>
+              </div>
+              <div class="rounded-2xl bg-white border border-green-cream px-4 py-3">
+                <p class="text-xs text-ink-soft">Estatura</p>
+                <p class="text-xl font-extrabold text-teal-deep">{{ p.height }} <span class="text-xs font-bold">cm</span></p>
+              </div>
+              <div class="rounded-2xl bg-white border border-green-cream px-4 py-3">
+                <p class="text-xs text-ink-soft">Género</p>
+                <p class="text-xl font-extrabold text-teal-deep">{{ generoCorto(p.gender) }}</p>
+              </div>
+            </div>
+
+            <!-- Objetivo y actividad -->
+            <section class="bg-white rounded-3xl border border-green-cream p-5 lg:p-8">
+              <h2 class="text-lg lg:text-xl font-extrabold text-teal-deep">Tu objetivo</h2>
+              <div class="mt-4 lg:mt-5 grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
+                <div class="flex items-center gap-4 rounded-2xl bg-teal-mid/10 px-4 py-4">
+                  <div class="w-11 h-11 shrink-0 rounded-xl bg-white text-teal-mid flex items-center justify-center">
+                    <lucide-angular [img]="TargetIcon" [size]="22" />
+                  </div>
+                  <div>
+                    <p class="hidden lg:block text-sm text-ink-soft">Objetivo</p>
+                    <p class="text-lg font-extrabold text-teal-deep leading-tight">{{ p.goal }}</p>
+                    <p class="text-sm text-ink-soft">{{ goalDescripcion(p.goal) }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4 rounded-2xl bg-cream-2 px-4 py-4">
+                  <div class="w-11 h-11 shrink-0 rounded-xl bg-white text-teal-mid flex items-center justify-center">
+                    <lucide-angular [img]="ActivityIcon" [size]="22" />
+                  </div>
+                  <div>
+                    <p class="hidden lg:block text-sm text-ink-soft">Nivel de actividad</p>
+                    <p class="text-lg font-extrabold text-teal-deep leading-tight">
+                      <span class="lg:hidden">{{ actividadMovil(p.activity_level) }}</span>
+                      <span class="hidden lg:inline">{{ p.activity_level }}</span>
+                    </p>
+                    <p class="text-sm text-ink-soft">{{ actividadDescripcion(p.activity_level) }}</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Meta diaria -->
+            @if (meta(); as m) {
+              <section class="bg-white rounded-3xl border border-green-cream p-5 lg:p-8">
+                <!-- Móvil -->
+                <div class="lg:hidden">
+                  <div class="flex items-baseline justify-between">
+                    <h2 class="text-lg font-extrabold text-teal-deep">Tu meta diaria</h2>
+                    <p class="text-2xl font-extrabold text-teal-deep">{{ m.calorias | number:'1.0-0' }} <span class="text-sm font-bold">kcal</span></p>
+                  </div>
+                  <div class="mt-4 grid grid-cols-3 gap-2">
+                    <div class="rounded-xl bg-cream px-3 py-2.5">
+                      <p class="flex items-center gap-1.5 text-xs text-ink-soft"><span class="w-2 h-2 rounded-sm bg-teal-mid"></span>Proteínas</p>
+                      <p class="font-extrabold text-ink">{{ m.proteinas | number:'1.0-0' }} g</p>
+                    </div>
+                    <div class="rounded-xl bg-cream px-3 py-2.5">
+                      <p class="flex items-center gap-1.5 text-xs text-ink-soft"><span class="w-2 h-2 rounded-sm bg-amber-500"></span>Carbos</p>
+                      <p class="font-extrabold text-ink">{{ m.carbohidratos | number:'1.0-0' }} g</p>
+                    </div>
+                    <div class="rounded-xl bg-cream px-3 py-2.5">
+                      <p class="flex items-center gap-1.5 text-xs text-ink-soft"><span class="w-2 h-2 rounded-sm bg-purple-500"></span>Grasas</p>
+                      <p class="font-extrabold text-ink">{{ m.grasas | number:'1.0-0' }} g</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Escritorio -->
+                <div class="hidden lg:grid grid-cols-2 gap-8 items-center">
+                  <div>
+                    <h2 class="text-xl font-extrabold text-teal-deep">Tu meta diaria</h2>
+                    <p class="mt-3 text-5xl font-extrabold text-teal-deep">{{ m.calorias | number:'1.0-0' }} <span class="text-lg font-bold">kcal</span></p>
+                    <p class="mt-2 text-sm text-ink-soft">Calculada con tus medidas, tu actividad y tu objetivo. Se actualiza si editas tu perfil.</p>
+                  </div>
+                  <div class="space-y-2.5">
+                    <div class="flex items-center justify-between rounded-xl bg-cream px-4 py-3">
+                      <span class="flex items-center gap-3 text-ink"><span class="w-3 h-3 rounded-sm bg-teal-mid"></span>Proteínas</span>
+                      <span class="font-bold text-ink">{{ m.proteinas | number:'1.0-0' }} g</span>
+                    </div>
+                    <div class="flex items-center justify-between rounded-xl bg-cream px-4 py-3">
+                      <span class="flex items-center gap-3 text-ink"><span class="w-3 h-3 rounded-sm bg-amber-500"></span>Carbohidratos</span>
+                      <span class="font-bold text-ink">{{ m.carbohidratos | number:'1.0-0' }} g</span>
+                    </div>
+                    <div class="flex items-center justify-between rounded-xl bg-cream px-4 py-3">
+                      <span class="flex items-center gap-3 text-ink"><span class="w-3 h-3 rounded-sm bg-purple-500"></span>Grasas</span>
+                      <span class="font-bold text-ink">{{ m.grasas | number:'1.0-0' }} g</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
             }
           </div>
 
-          <!-- Nombre e info -->
-          <div class="flex-1 min-w-0">
-            <h1 class="text-3xl font-bold text-gray-900">{{ fullName() }}</h1>
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-sm text-gray-500">
-              <span class="flex items-center gap-1.5">
-                <lucide-angular [img]="MailIcon" [size]="14" />
-                {{ perfil()!.email }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Botón editar -->
-          <a routerLink="/cliente/editar-perfil"
-             class="flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm cursor-pointer shrink-0">
-            <lucide-angular [img]="PencilIcon" [size]="15" />
-            Editar perfil
-          </a>
-        </div>
-
-        <hr class="border-gray-100" />
-
-        <!-- ── Body ── -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-          <!-- ===== Columna izquierda (2/3) ===== -->
-          <div class="lg:col-span-2 space-y-5">
-
-            <!-- Información Personal -->
-            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-              <div class="flex items-center gap-2 mb-5">
-                <lucide-angular [img]="UserIcon" [size]="17" class="text-primary-500" />
-                <h2 class="text-base font-semibold text-gray-800">Información Personal</h2>
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5">
-                <div>
-                  <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-1">Nombre Completo</p>
-                  <p class="text-sm font-medium text-gray-800">{{ fullName() }}</p>
-                </div>
-                <div>
-                  <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-1">Correo Electrónico</p>
-                  <p class="text-sm font-medium text-gray-800">{{ perfil()!.email }}</p>
-                </div>
-                <div>
-                  <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-1">Fecha de Nacimiento</p>
-                  <p class="text-sm font-medium text-gray-800">{{ formatBirthDate(perfil()!.birth_date) }}</p>
-                </div>
-                <div>
-                  <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-1">Edad Calculada</p>
-                  <p class="text-sm font-medium text-gray-800">{{ calcularEdad(perfil()!.birth_date) }} años</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Métricas de Salud -->
-            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-              <div class="flex items-center gap-2 mb-5">
-                <lucide-angular [img]="ActivityIcon" [size]="17" class="text-primary-500" />
-                <h2 class="text-base font-semibold text-gray-800">Métricas de Salud</h2>
-              </div>
-              <div class="grid grid-cols-3 gap-4 text-center">
-                <div class="flex flex-col items-center gap-2">
-                  <div class="w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center">
-                    <lucide-angular [img]="ScaleIcon" [size]="22" class="text-primary-400" />
-                  </div>
-                  <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Peso Actual</p>
-                  <p class="text-lg font-bold text-gray-800">{{ perfil()!.weight }} kg</p>
-                </div>
-                <div class="flex flex-col items-center gap-2">
-                  <div class="w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center">
-                    <lucide-angular [img]="RulerIcon" [size]="22" class="text-primary-400" />
-                  </div>
-                  <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Estatura</p>
-                  <p class="text-lg font-bold text-gray-800">{{ perfil()!.height }} cm</p>
-                </div>
-                <div class="flex flex-col items-center gap-2">
-                  <div class="w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center">
-                    <lucide-angular [img]="UserIcon" [size]="22" class="text-primary-400" />
-                  </div>
-                  <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Género</p>
-                  <p class="text-lg font-bold text-gray-800">{{ generoTexto(perfil()!.gender) }}</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Nivel de Actividad + Objetivo Principal -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-
-              <!-- Nivel de Actividad -->
-              <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-                <div class="flex items-center gap-2 mb-4">
-                  <lucide-angular [img]="ActivityIcon" [size]="17" class="text-primary-500" />
-                  <h2 class="text-base font-semibold text-gray-800">Nivel de actividad</h2>
-                </div>
-                <div class="flex items-center gap-3 bg-primary-50 rounded-xl px-4 py-3">
-                  <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                    <lucide-angular [img]="ActivityIcon" [size]="16" class="text-primary-500" />
-                  </div>
-                  <div>
-                    <p class="text-sm font-bold text-primary-600">{{ perfil()!.activity_level }}</p>
-                    <p class="text-xs text-gray-500">{{ actividadDescripcion(perfil()!.activity_level) }}</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Objetivo Principal -->
-              <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-                <div class="flex items-center gap-2 mb-4">
-                  <lucide-angular [img]="TargetIcon" [size]="17" [ngClass]="goalIconClass(perfil()!.goal)" />
-                  <h2 class="text-base font-semibold text-gray-800">Objetivo principal</h2>
-                </div>
-                <div class="flex items-center gap-3 rounded-xl px-4 py-3" [ngClass]="goalBgClass(perfil()!.goal)">
-                  <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                    <lucide-angular [img]="TargetIcon" [size]="16" [ngClass]="goalIconClass(perfil()!.goal)" />
-                  </div>
-                  <div>
-                    <p class="text-sm font-bold" [ngClass]="goalTextClass(perfil()!.goal)">{{ perfil()!.goal }}</p>
-                    <p class="text-xs text-gray-500">{{ goalDescripcion(perfil()!.goal) }}</p>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- ===== Columna derecha (1/3) ===== -->
-          <div class="space-y-5">
+          <!-- Columna lateral -->
+          <div class="space-y-5 lg:space-y-6">
 
             <!-- IMC -->
-            @let imc = calcularIMC(perfil()!.weight, perfil()!.height);
-            @let estadoImc = estadoIMC(imc);
-
-            <div class="rounded-2xl p-6 border border-primary-200 bg-gradient-to-br from-primary-50 via-primary-50 to-primary-100">
-              <p class="text-[11px] font-bold text-primary-500 uppercase tracking-widest mb-4">
-                Índice de Masa Corporal (IMC)
-              </p>
-              <div class="flex flex-col items-center gap-1 py-4">
-                <p class="text-6xl font-black text-gray-900 tracking-tight leading-none">{{ imc }}</p>
-                <p class="text-sm text-primary-400 mt-1">kg/m²</p>
-                <span class="mt-3 px-6 py-1.5 text-white text-sm font-bold rounded-full shadow-sm" [ngClass]="estadoImc.clase">
-                  Estado: {{ estadoImc.texto }}
-                </span>
+            <section class="bg-white rounded-3xl border border-green-cream p-5 lg:p-7">
+              <div class="flex items-baseline justify-between lg:block">
+                <h2 class="text-lg lg:text-xl font-extrabold text-teal-deep">
+                  <span class="lg:hidden">Tu IMC</span><span class="hidden lg:inline">Índice de masa corporal</span>
+                </h2>
+                <p class="text-2xl lg:text-5xl font-extrabold text-teal-deep lg:mt-2">
+                  {{ imc() | number:'1.1-1' }}<span class="hidden lg:inline text-base font-bold ml-2">kg/m²</span>
+                </p>
               </div>
-              <p class="text-xs text-center text-primary-500 leading-relaxed mt-4">
-                {{ descripcionIMC(imc) }}
-              </p>
-            </div>
 
-            <!-- Condiciones Médicas -->
-            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-              <div class="flex items-center gap-2 mb-4">
-                <lucide-angular [img]="ShieldIcon" [size]="17" class="text-primary-500" />
-                <h2 class="text-base font-semibold text-gray-800">Condiciones médicas</h2>
-              </div>
-              @if (perfil()!.medical_conditions.length > 0) {
-                <div class="flex flex-wrap gap-2">
-                  @for (cond of perfil()!.medical_conditions; track cond) {
-                    <span class="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
-                      {{ cond }}
-                    </span>
+              @if (imc() > 0) {
+                <!-- Escala -->
+                <div class="mt-5 relative">
+                  <div class="absolute -top-3 -translate-x-1/2 w-0 h-0 border-x-[6px] border-x-transparent border-t-[8px] border-t-ink"
+                       [style.left.%]="posicionIMC()"></div>
+                  <div class="flex gap-1">
+                    @for (t of tramosIMC; track t.label) {
+                      <div class="h-2.5 rounded-full" [ngClass]="t.color" [style.width.%]="anchoTramo(t)"></div>
+                    }
+                  </div>
+                  <div class="flex gap-1 mt-1.5">
+                    @for (t of tramosIMC; track t.label) {
+                      <span class="text-[11px] text-ink-soft truncate" [style.width.%]="anchoTramo(t)">{{ t.label }}</span>
+                    }
+                  </div>
+                </div>
+
+                <p class="mt-4 text-sm text-ink leading-relaxed">
+                  Estás en el rango de <span class="font-bold">{{ rangoIMC() }}</span>. El IMC es solo una referencia: no distingue músculo de grasa. Tu menú y tu meta ya están pensados para tu objetivo.
+                </p>
+                <p class="hidden lg:block mt-3 text-xs text-ink-soft">Si tienes dudas sobre tu salud, un profesional puede orientarte.</p>
+              } @else {
+                <p class="mt-4 text-sm text-ink-soft">No hay datos suficientes para calcular el IMC.</p>
+              }
+            </section>
+
+            <!-- Condiciones médicas -->
+            <section class="bg-white rounded-3xl border border-green-cream p-5 lg:p-7">
+              <h2 class="text-lg lg:text-xl font-extrabold text-teal-deep">Condiciones médicas</h2>
+              @if (condiciones().length) {
+                <div class="mt-3 flex flex-wrap gap-2">
+                  @for (c of condiciones(); track c) {
+                    <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-sm font-medium">{{ c }}</span>
                   }
                 </div>
               } @else {
-                <p class="text-sm text-gray-400">Sin condiciones médicas registradas.</p>
+                <p class="mt-3 text-ink-soft">
+                  <span class="lg:hidden">No registraste ninguna.</span>
+                  <span class="hidden lg:inline">No registraste ninguna. Si tienes alguna, agrégala para que la IA la tome en cuenta en tu menú.</span>
+                </p>
               }
-            </div>
+              <a routerLink="/cliente/editar-perfil" class="mt-3 inline-block font-semibold text-teal-mid hover:text-teal-deep">
+                {{ condiciones().length ? 'Editar condiciones' : 'Agregar una condición' }}
+              </a>
+            </section>
 
+            <!-- Datos de la cuenta -->
+            <section class="bg-white rounded-3xl border border-green-cream p-5 lg:p-7">
+              <h2 class="text-lg lg:text-xl font-extrabold text-teal-deep">Datos de la cuenta</h2>
+
+              <!-- Móvil -->
+              <dl class="lg:hidden mt-3 space-y-2">
+                <div class="flex items-center justify-between">
+                  <dt class="text-ink-soft">Nacimiento</dt>
+                  <dd class="font-semibold text-ink">{{ formatBirthDateCorta(p.birth_date) }}</dd>
+                </div>
+                @if (enCalofitDesde(); as desde) {
+                  <div class="flex items-center justify-between">
+                    <dt class="text-ink-soft">En Calofit desde</dt>
+                    <dd class="font-semibold text-ink">{{ desde }}</dd>
+                  </div>
+                }
+              </dl>
+
+              <!-- Escritorio -->
+              <dl class="hidden lg:block mt-4 space-y-4">
+                <div>
+                  <dt class="text-sm text-ink-soft">Fecha de nacimiento</dt>
+                  <dd class="text-lg font-bold text-ink">{{ formatBirthDate(p.birth_date) }}</dd>
+                </div>
+                <div>
+                  <dt class="text-sm text-ink-soft">Correo</dt>
+                  <dd class="text-lg font-bold text-ink break-all">{{ p.email }}</dd>
+                </div>
+              </dl>
+            </section>
           </div>
         </div>
+
+        <!-- Cerrar sesión (solo móvil: en escritorio está en el menú lateral) -->
+        <button (click)="logout()"
+          class="lg:hidden w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-white border border-green-cream text-ink font-semibold hover:bg-cream-2 transition-colors cursor-pointer">
+          <lucide-angular [img]="LogOutIcon" [size]="18" />
+          Cerrar sesión
+        </button>
       }
     </div>
   `,
 })
 export class PerfilComponent implements OnInit {
   private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
 
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly perfil = signal<PerfilResponse | null>(null);
+  readonly meta = signal<MetaDiaria | null>(null);
 
-  readonly UserIcon = User;
-  readonly MailIcon = Mail;
   readonly ActivityIcon = Activity;
-  readonly ScaleIcon = Scale;
-  readonly RulerIcon = Ruler;
   readonly TargetIcon = Target;
-  readonly ShieldIcon = Shield;
   readonly PencilIcon = Pencil;
+  readonly LogOutIcon = LogOut;
+  readonly tramosIMC = TRAMOS_IMC;
+
+  readonly condiciones = computed(() =>
+    (this.perfil()?.medical_conditions ?? []).filter(c => c && c.trim().toLowerCase() !== 'ninguna'),
+  );
+
+  readonly edad = computed(() => {
+    const p = this.perfil();
+    return p?.birth_date ? this.calcularEdad(p.birth_date) : 0;
+  });
+
+  readonly imc = computed(() => {
+    const p = this.perfil();
+    return p ? this.calcularIMC(p.weight, p.height) : 0;
+  });
+
+  readonly enCalofitDesde = computed(() => {
+    const creado = this.perfil()?.created_at;
+    if (!creado) return '';
+    const fecha = new Date(creado);
+    if (isNaN(fecha.getTime())) return '';
+    const mes = new Intl.DateTimeFormat('es-PE', { month: 'long' }).format(fecha);
+    return `${mes} ${fecha.getFullYear()}`;
+  });
 
   ngOnInit(): void {
     this.http.get<PerfilResponse>(`${API_URL}/clientes/perfil`).subscribe({
@@ -276,6 +380,26 @@ export class PerfilComponent implements OnInit {
         this.loading.set(false);
       },
     });
+
+    // Meta diaria (kcal y macros) que calcula el backend
+    this.http.get<any>(`${API_URL}/balance/hoy`).subscribe({
+      next: (res) => {
+        const r = res?.resumen;
+        if (r?.objetivo_diario) {
+          this.meta.set({
+            calorias: r.objetivo_diario,
+            proteinas: r.proteinas_objetivo,
+            carbohidratos: r.carbohidratos_objetivo,
+            grasas: r.grasas_objetivo,
+          });
+        }
+      },
+      error: () => this.meta.set(null),
+    });
+  }
+
+  logout(): void {
+    this.auth.logout();
   }
 
   fullName(): string {
@@ -287,12 +411,17 @@ export class PerfilComponent implements OnInit {
   initials(): string {
     const p = this.perfil();
     if (!p) return '?';
-    return (p.first_name[0] + p.last_name_paternal[0]).toUpperCase();
+    return ((p.first_name?.[0] ?? '') + (p.last_name_paternal?.[0] ?? '')).toUpperCase() || '?';
   }
 
   formatBirthDate(dateStr: string): string {
     const date = new Date(dateStr + 'T00:00:00');
     return date.toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  formatBirthDateCorta(dateStr: string): string {
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
   calcularEdad(dateStr: string): number {
@@ -308,72 +437,66 @@ export class PerfilComponent implements OnInit {
     return g === 'M' ? 'Masculino' : g === 'F' ? 'Femenino' : g;
   }
 
+  generoCorto(g: string): string {
+    return g === 'M' ? 'Masc.' : g === 'F' ? 'Fem.' : g;
+  }
+
   calcularIMC(peso: number, altura: number): number {
-    if (!altura) return 0;
+    if (!altura || !peso) return 0;
     const alturaM = altura / 100;
     return Math.round((peso / (alturaM * alturaM)) * 100) / 100;
   }
 
-  estadoIMC(imc: number): { texto: string; clase: string } {
-    if (!imc) return { texto: 'Sin datos', clase: 'bg-gray-400' };
-    if (imc < 18.5) return { texto: 'Bajo peso', clase: 'bg-yellow-500' };
-    if (imc < 25) return { texto: 'Normal', clase: 'bg-green-500' };
-    if (imc < 30) return { texto: 'Sobrepeso', clase: 'bg-orange-500' };
-    return { texto: 'Obesidad', clase: 'bg-red-500' };
+  // ---- escala del IMC ----
+
+  anchoTramo(t: TramoIMC): number {
+    return ((t.hasta - t.desde) / (IMC_MAX - IMC_MIN)) * 100;
   }
 
-  descripcionIMC(imc: number): string {
-    if (!imc) return 'No hay datos suficientes para calcular el IMC.';
-    if (imc < 18.5) return 'Tu IMC indica que estás por debajo del rango de peso saludable.';
-    if (imc < 25) return 'Tu IMC indica que te encuentras en un rango de peso saludable para tu estatura.';
-    if (imc < 30) return 'Tu IMC indica un ligero exceso de peso respecto a tu estatura.';
-    return 'Tu IMC indica obesidad. Se recomienda consultar a un profesional de salud.';
+  posicionIMC(): number {
+    const pos = ((this.imc() - IMC_MIN) / (IMC_MAX - IMC_MIN)) * 100;
+    return Math.min(100, Math.max(0, pos));
   }
+
+  rangoIMC(): string {
+    const imc = this.imc();
+    if (imc < 18.5) return 'menos de 18.5';
+    if (imc < 25) return '18.5 a 24.9';
+    if (imc < 30) return '25 a 29.9';
+    return '30 o más';
+  }
+
+  // ---- textos de objetivo y actividad ----
 
   actividadDescripcion(nivel: string): string {
     const map: Record<string, string> = {
       'Sedentario': 'Poca o ninguna actividad',
-      'Ligero': 'Ejercicio 1-3 días/semana',
-      'Moderado': 'Ejercicio 3-5 días/semana',
-      'Intenso': 'Ejercicio 6-7 días/semana',
+      'Ligero': 'Ejercicio 1–3 días por semana',
+      'Moderado': 'Ejercicio 3–5 días por semana',
+      'Intenso': 'Ejercicio 6–7 días por semana',
       'Muy intenso': 'Ejercicio diario intenso',
+    };
+    return map[nivel] ?? nivel;
+  }
+
+  /** "Moderado" → "Actividad moderada" (título de la tarjeta en móvil). */
+  actividadMovil(nivel: string): string {
+    const map: Record<string, string> = {
+      'Sedentario': 'Actividad sedentaria',
+      'Ligero': 'Actividad ligera',
+      'Moderado': 'Actividad moderada',
+      'Intenso': 'Actividad intensa',
+      'Muy intenso': 'Actividad muy intensa',
     };
     return map[nivel] ?? nivel;
   }
 
   goalDescripcion(goal: string): string {
     const map: Record<string, string> = {
-      'Perder peso': 'Enfoque en déficit calórico',
-      'Mantener peso': 'Equilibrio calórico',
-      'Ganar masa': 'Superávit calórico',
+      'Perder peso': 'Con un déficit calórico suave',
+      'Mantener peso': 'Con calorías de mantenimiento',
+      'Ganar masa': 'Con un superávit calórico suave',
     };
     return map[goal] ?? goal;
-  }
-
-  goalBgClass(goal: string): string {
-    switch (goal) {
-      case 'Perder peso': return 'bg-rose-50';
-      case 'Mantener peso': return 'bg-blue-50';
-      case 'Ganar masa': return 'bg-emerald-50';
-      default: return 'bg-gray-50';
-    }
-  }
-
-  goalTextClass(goal: string): string {
-    switch (goal) {
-      case 'Perder peso': return 'text-rose-500';
-      case 'Mantener peso': return 'text-blue-500';
-      case 'Ganar masa': return 'text-emerald-600';
-      default: return 'text-gray-600';
-    }
-  }
-
-  goalIconClass(goal: string): string {
-    switch (goal) {
-      case 'Perder peso': return 'text-rose-400';
-      case 'Mantener peso': return 'text-blue-400';
-      case 'Ganar masa': return 'text-emerald-500';
-      default: return 'text-gray-500';
-    }
   }
 }

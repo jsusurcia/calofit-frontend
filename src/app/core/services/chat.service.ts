@@ -17,6 +17,21 @@ export interface ChatHistorialResponse {
   hay_mas: boolean;
 }
 
+/** Cambio de comida propuesto por CaloCoach, pendiente de que el cliente lo confirme. */
+export interface PropuestaSwap {
+  dia: string;
+  dia_numero: number;
+  tipo_comida: string;
+  plato: string;
+}
+
+export interface ChatRespuesta {
+  reply: string;
+  /** 'registrar' | 'swap' | 'swap_propuesta' | null */
+  action_taken: string | null;
+  propuesta?: PropuestaSwap | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ChatService {
   private http = inject(HttpClient);
@@ -29,7 +44,27 @@ export class ChatService {
     return this.http.get<ChatHistorialResponse>(`${API}/chat/historial`, { params });
   }
 
-  enviarMensaje(message: string): Observable<any> {
-    return this.http.post<any>(`${API}/chat/mensaje`, { message });
+  enviarMensaje(message: string): Observable<ChatRespuesta> {
+    return this.http.post<ChatRespuesta>(`${API}/chat/mensaje`, { message });
+  }
+
+  /** Aplica al menú una comida propuesta antes. */
+  confirmarSwap(propuesta: PropuestaSwap, textoUsuario?: string): Observable<ChatRespuesta> {
+    return this.http.post<ChatRespuesta>(`${API}/chat/swap/confirmar`, {
+      dia_numero: propuesta.dia_numero,
+      tipo_comida: propuesta.tipo_comida,
+      nueva_comida: propuesta.plato,
+      texto_usuario: textoUsuario,
+    });
+  }
+
+  /** Pide otra alternativa para la misma comida (sin aplicarla). */
+  otraOpcionSwap(propuesta: PropuestaSwap, textoUsuario?: string): Observable<ChatRespuesta> {
+    return this.http.post<ChatRespuesta>(`${API}/chat/swap/otra`, {
+      dia_numero: propuesta.dia_numero,
+      tipo_comida: propuesta.tipo_comida,
+      plato_anterior: propuesta.plato,
+      texto_usuario: textoUsuario,
+    });
   }
 }

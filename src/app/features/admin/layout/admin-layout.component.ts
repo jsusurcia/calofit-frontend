@@ -17,38 +17,36 @@ import { LucideAngularModule, LayoutDashboard, Users, LogOut, CreditCard } from 
       </div>
     }
 
-    <div class="flex h-screen bg-gray-50">
+    <div class="flex h-screen bg-cream">
       <!-- Sidebar -->
       <aside
-        class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex flex-col transition-transform duration-300 ease-in-out"
+        class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-teal-deep flex flex-col transition-transform duration-300 ease-in-out"
         [class.translate-x-0]="sidebarOpen()"
         [class.-translate-x-full]="!sidebarOpen()"
         [class.lg:translate-x-0]="true">
 
         <!-- Logo & branding -->
-        <div class="px-6 py-5 border-b border-gray-100">
+        <div class="px-6 py-5">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center shadow-md shadow-primary-500/20">
-              <span class="text-white font-bold text-lg">C</span>
-            </div>
+            <img src="/perezoso.png" alt="Calofit" class="w-11 h-11 object-contain shrink-0" />
             <div>
-              <h1 class="text-lg font-bold text-gray-900 tracking-tight">Calofit</h1>
-              <p class="text-xs text-gray-500 font-medium">Panel Administrador</p>
+              <h1 class="text-lg font-bold text-white tracking-tight">Calofit</h1>
+              <p class="text-xs text-white/60 font-medium">Panel Administrador</p>
             </div>
           </div>
         </div>
 
         <!-- User info -->
-        <div class="px-6 py-4 border-b border-gray-100">
+        <div class="px-6 py-4">
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center">
-              <span class="text-primary-700 font-semibold text-sm">
+            <div class="w-9 h-9 bg-green-pale rounded-full flex items-center justify-center">
+              <span class="text-teal-deep font-semibold text-sm">
                 {{ auth.fullName().charAt(0).toUpperCase() }}
               </span>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold text-gray-900 truncate">{{ auth.fullName() }}</p>
-              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary-900 text-white">
+              <p class="text-sm font-semibold text-white truncate">{{ auth.fullName() }}</p>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-teal-mid text-white">
                 Admin
               </span>
             </div>
@@ -60,14 +58,14 @@ import { LucideAngularModule, LayoutDashboard, Users, LogOut, CreditCard } from 
           @for (item of navItems; track item.route) {
             <a
               [routerLink]="item.route"
-              routerLinkActive="bg-primary-50 text-primary-700 border-primary-500"
+              routerLinkActive="bg-white/10 text-white"
               [routerLinkActiveOptions]="{ exact: item.exact }"
-              class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 border-l-[3px] border-transparent"
+              class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white transition-all duration-200"
               (click)="sidebarOpen.set(false)">
               <lucide-angular [img]="item.icon" [size]="18" class="shrink-0" />
               <span class="flex-1">{{ item.label }}</span>
               @if (item.route === '/admin/pagos' && pagosPendientesCount() > 0) {
-                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold bg-amber-500 text-white">
+                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold bg-cyan-ring text-teal-deep">
                   {{ pagosPendientesCount() > 9 ? '9+' : pagosPendientesCount() }}
                 </span>
               }
@@ -76,10 +74,10 @@ import { LucideAngularModule, LayoutDashboard, Users, LogOut, CreditCard } from 
         </nav>
 
         <!-- Logout -->
-        <div class="px-3 py-4 border-t border-gray-100">
+        <div class="px-3 py-4">
           <button
             (click)="auth.logout()"
-            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-danger-50 hover:text-danger-600 transition-all duration-200 cursor-pointer">
+            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white transition-all duration-200 cursor-pointer">
             <lucide-angular [img]="LogOutIcon" [size]="18" class="shrink-0" />
             <span>Cerrar sesión</span>
           </button>
@@ -89,19 +87,23 @@ import { LucideAngularModule, LayoutDashboard, Users, LogOut, CreditCard } from 
       <!-- Main content area -->
       <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
         <!-- Top bar (mobile) -->
-        <header class="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
+        <header class="lg:hidden bg-teal-deep px-4 py-3 flex items-center gap-3">
           <button
             (click)="sidebarOpen.set(!sidebarOpen())"
-            class="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            aria-label="Abrir menú"
+            class="p-2 -ml-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
           </button>
           <div class="flex items-center gap-2">
-            <div class="w-7 h-7 bg-primary-500 rounded-lg flex items-center justify-center">
-              <span class="text-white font-bold text-xs">C</span>
-            </div>
-            <span class="font-semibold text-gray-900 text-sm">Calofit Admin</span>
+            <img src="/perezoso.png" alt="Calofit" class="w-8 h-8 object-contain" />
+            <span class="font-bold text-white text-base tracking-tight">Calofit</span>
+          </div>
+          <div class="ml-auto w-9 h-9 bg-green-pale rounded-full flex items-center justify-center">
+            <span class="text-teal-deep font-semibold text-sm">
+              {{ auth.fullName().charAt(0).toUpperCase() }}
+            </span>
           </div>
         </header>
 

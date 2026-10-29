@@ -4,16 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { ToastrService } from 'ngx-toastr';
-import {
-  LucideAngularModule,
-  Scale,
-  Ruler,
-  Activity,
-  Target,
-  Stethoscope,
-  X,
-  Save,
-} from 'lucide-angular';
+import { LucideAngularModule, ChevronLeft, TrendingDown, ArrowLeftRight, Dumbbell, Check } from 'lucide-angular';
 import { environment } from '../../../../environments/environment';
 
 const API_URL = environment.apiUrl;
@@ -32,189 +23,153 @@ interface UpdateResponse {
   plan_recalculado: boolean;
 }
 
+type CondicionKey = 'ninguna' | 'diabetes' | 'hipertension' | 'asma';
+
 @Component({
   selector: 'app-editar-perfil',
   imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule],
   template: `
-    <div class="p-4 md:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
+    <div class="p-4 lg:p-8 max-w-5xl mx-auto space-y-5 lg:space-y-6">
 
-      <!-- ── Header ── -->
-      <div class="flex flex-col sm:flex-row sm:items-start gap-4 justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">Editar perfil</h1>
-          <p class="text-sm text-gray-400 mt-1">
-            Actualiza tu información personal y métricas de salud para un seguimiento preciso.
-          </p>
-        </div>
-        <div class="flex items-center gap-3 shrink-0">
-          <a routerLink="/cliente/perfil"
-             class="flex items-center gap-2 px-4 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
-            <lucide-angular [img]="XIcon" [size]="14" />
-            Cancelar
-          </a>
-          <button (click)="save()" [disabled]="saving() || loading()"
-            class="flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm cursor-pointer">
-            <lucide-angular [img]="SaveIcon" [size]="15" />
-            {{ saving() ? 'Guardando...' : 'Guardar cambios' }}
-          </button>
-        </div>
+      <!-- Encabezado -->
+      <div class="animate-fade-in-up">
+        <a routerLink="/cliente/perfil" class="inline-flex items-center gap-1 text-sm font-medium text-teal-mid hover:text-teal-deep">
+          <lucide-angular [img]="ChevronLeftIcon" [size]="16" />
+          Volver a mi perfil
+        </a>
+        <h1 class="mt-2 text-3xl lg:text-4xl font-extrabold text-teal-deep">Editar perfil</h1>
+        <p class="mt-1 text-ink-soft">Con estos datos calculamos tu meta diaria y armamos tu menú.</p>
       </div>
 
       <!-- Loading -->
       @if (loading()) {
         <div class="flex items-center justify-center py-20">
           <div class="flex flex-col items-center gap-3">
-            <div class="w-10 h-10 border-3 border-primary-200 border-t-primary-500 rounded-full animate-spin"></div>
-            <p class="text-sm text-gray-400">Cargando datos...</p>
+            <div class="w-10 h-10 border-4 border-green-cream border-t-teal-mid rounded-full animate-spin"></div>
+            <p class="text-sm text-ink-soft">Cargando datos...</p>
           </div>
         </div>
       }
 
-      <!-- Formulario -->
       @if (!loading()) {
-
-        <!-- Error global -->
         @if (error()) {
-          <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
-            {{ error() }}
-          </div>
+          <div class="bg-red-50 border border-red-200 text-red-700 rounded-2xl px-4 py-3 text-sm">{{ error() }}</div>
         }
 
-        <!-- ── Tarjeta principal ── -->
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-
-          <!-- Encabezado de la tarjeta -->
-          <div class="px-6 pt-6 pb-5">
-            <h2 class="text-lg font-bold text-gray-900">Datos de salud</h2>
-            <p class="text-sm text-gray-400 mt-0.5">Actualiza tus medidas biométricas y preferencias personales.</p>
-          </div>
-
-          <hr class="border-gray-100" />
-
-          <!-- ── Métricas Vitales ── -->
-          <div class="px-6 py-6">
-            <div class="flex items-center gap-2 mb-5">
-              <lucide-angular [img]="ScaleIcon" [size]="17" class="text-primary-500" />
-              <h3 class="text-sm font-semibold text-gray-800">Métricas vitales</h3>
+        <!-- Tus medidas -->
+        <section class="bg-white rounded-3xl border border-green-cream p-6 lg:p-8 animate-fade-in-up">
+          <h2 class="text-xl font-extrabold text-teal-deep">Tus medidas</h2>
+          <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+            <div>
+              <label for="peso" class="block text-sm font-medium text-ink mb-2">Peso</label>
+              <div class="relative">
+                <input id="peso" type="number" [(ngModel)]="weight" name="weight" min="25" max="350" step="0.1"
+                  class="w-full pl-4 pr-12 py-3.5 rounded-2xl border border-green-cream bg-cream text-ink focus:outline-none focus:ring-2 focus:ring-teal-mid/20 focus:border-teal-mid transition-all" />
+                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-ink-soft pointer-events-none">kg</span>
+              </div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-
-              <!-- Peso -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Peso (kg)</label>
-                <div class="relative">
-                  <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                    <lucide-angular [img]="ScaleIcon" [size]="16" />
-                  </div>
-                  <input type="number" [(ngModel)]="weight" name="weight" min="25" max="350" step="0.1"
-                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 transition-all" />
-                </div>
-                <p class="text-xs text-gray-400 mt-1.5">Ingresa tu peso actual en kilogramos.</p>
+            <div>
+              <label for="estatura" class="block text-sm font-medium text-ink mb-2">Estatura</label>
+              <div class="relative">
+                <input id="estatura" type="number" [(ngModel)]="height" name="height" min="60" max="250"
+                  class="w-full pl-4 pr-12 py-3.5 rounded-2xl border border-green-cream bg-cream text-ink focus:outline-none focus:ring-2 focus:ring-teal-mid/20 focus:border-teal-mid transition-all" />
+                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-ink-soft pointer-events-none">cm</span>
               </div>
-
-              <!-- Estatura -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Estatura (cm)</label>
-                <div class="relative">
-                  <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                    <lucide-angular [img]="RulerIcon" [size]="16" />
-                  </div>
-                  <input type="number" [(ngModel)]="height" name="height" min="60" max="250"
-                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 transition-all" />
-                </div>
-                <p class="text-xs text-gray-400 mt-1.5">Ingresa tu altura total en centímetros.</p>
-              </div>
-
+            </div>
+            <div class="rounded-2xl bg-cream-2 px-5 py-3.5 flex items-center gap-3 h-[52px]">
+              <span class="text-sm text-ink-soft">IMC estimado</span>
+              <span class="text-xl font-extrabold text-teal-deep">{{ imcEstimado() ?? '—' }}</span>
             </div>
           </div>
+        </section>
 
-          <hr class="border-gray-100" />
+        <!-- Objetivo -->
+        <section class="bg-white rounded-3xl border border-green-cream p-6 lg:p-8 animate-fade-in-up">
+          <h2 class="text-xl font-extrabold text-teal-deep">¿Cuál es tu objetivo?</h2>
+          <div class="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+            @for (o of objetivos; track o.value) {
+              <button type="button" (click)="goal = o.value"
+                class="relative text-left rounded-2xl border-2 p-5 transition-colors cursor-pointer"
+                [ngClass]="goal === o.value ? 'border-teal-mid bg-teal-mid/5' : 'border-green-cream bg-white hover:bg-cream'">
+                @if (goal === o.value) {
+                  <span class="absolute top-4 right-4 w-7 h-7 rounded-full bg-teal-mid text-white flex items-center justify-center">
+                    <lucide-angular [img]="CheckIcon" [size]="14" />
+                  </span>
+                }
+                <span class="w-11 h-11 rounded-xl flex items-center justify-center text-teal-mid"
+                      [ngClass]="goal === o.value ? 'bg-white' : 'bg-cream-2'">
+                  <lucide-angular [img]="o.icon" [size]="20" />
+                </span>
+                <span class="block mt-4 text-lg font-extrabold text-teal-deep">{{ o.label }}</span>
+                <span class="block mt-1 text-sm text-ink-soft">{{ o.desc }}</span>
+              </button>
+            }
+          </div>
+        </section>
 
-          <!-- ── Nivel de Actividad + Objetivo de Salud ── -->
-          <div class="px-6 py-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+        <!-- Actividad -->
+        <section class="bg-white rounded-3xl border border-green-cream p-6 lg:p-8 animate-fade-in-up">
+          <h2 class="text-xl font-extrabold text-teal-deep">¿Qué tan activo eres?</h2>
+          <div class="mt-5 grid grid-cols-2 md:grid-cols-4 gap-4">
+            @for (a of niveles; track a.value; let i = $index) {
+              <button type="button" (click)="activityLevel = a.value"
+                class="text-left rounded-2xl border-2 p-4 transition-colors cursor-pointer"
+                [ngClass]="activityLevel === a.value ? 'border-teal-mid bg-teal-mid/5' : 'border-green-cream bg-white hover:bg-cream'">
+                <!-- Barras de intensidad -->
+                <span class="flex items-end gap-1 h-5" aria-hidden="true">
+                  @for (n of [1, 2, 3, 4]; track n) {
+                    <span class="w-1.5 rounded-full"
+                          [style.height.px]="8 + n * 4"
+                          [ngClass]="n <= i + 1 ? 'bg-teal-mid' : 'bg-green-cream'"></span>
+                  }
+                </span>
+                <span class="block mt-3 font-extrabold text-teal-deep">{{ a.value }}</span>
+                <span class="block mt-0.5 text-sm text-ink-soft">{{ a.desc }}</span>
+              </button>
+            }
+          </div>
+        </section>
 
-              <!-- Nivel de Actividad -->
-              <div>
-                <div class="flex items-center gap-2 mb-4">
-                  <lucide-angular [img]="ActivityIcon" [size]="17" class="text-primary-500" />
-                  <h3 class="text-sm font-semibold text-gray-800">Nivel de actividad</h3>
-                </div>
-                <select [(ngModel)]="activityLevel" name="activityLevel"
-                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 transition-all">
-                  <option value="Sedentario">Sedentario (Poca o ninguna actividad)</option>
-                  <option value="Ligero">Ligero (Ejercicio 1-3 días/semana)</option>
-                  <option value="Moderado">Moderado (Ejercicio 3-5 días/semana)</option>
-                  <option value="Intenso">Intenso (Ejercicio 6-7 días/semana)</option>
-                  <option value="Muy intenso">Muy intenso (Ejercicio diario intenso)</option>
-                </select>
-              </div>
-
-              <!-- Objetivo de Salud -->
-              <div>
-                <div class="flex items-center gap-2 mb-4">
-                  <lucide-angular [img]="TargetIcon" [size]="17" class="text-primary-500" />
-                  <h3 class="text-sm font-semibold text-gray-800">Objetivo</h3>
-                </div>
-                <div class="space-y-3">
-                  <label class="flex items-center gap-3 cursor-pointer">
-                    <input type="radio" [(ngModel)]="goal" name="goal" value="Perder peso"
-                      class="accent-primary-500 w-4 h-4 cursor-pointer" />
-                    <span class="text-sm text-gray-700">Perder peso</span>
-                  </label>
-                  <label class="flex items-center gap-3 cursor-pointer">
-                    <input type="radio" [(ngModel)]="goal" name="goal" value="Mantener peso"
-                      class="accent-primary-500 w-4 h-4 cursor-pointer" />
-                    <span class="text-sm text-gray-700">Mantener peso</span>
-                  </label>
-                  <label class="flex items-center gap-3 cursor-pointer">
-                    <input type="radio" [(ngModel)]="goal" name="goal" value="Ganar masa"
-                      class="accent-primary-500 w-4 h-4 cursor-pointer" />
-                    <span class="text-sm text-gray-700">Aumentar masa muscular</span>
-                  </label>
-                </div>
-              </div>
-
-            </div>
+        <!-- Condiciones médicas -->
+        <section class="bg-white rounded-3xl border border-green-cream p-6 lg:p-8 animate-fade-in-up">
+          <h2 class="text-xl font-extrabold text-teal-deep">Condiciones médicas</h2>
+          <p class="mt-1 text-ink-soft">La IA las tiene en cuenta al armar tu menú. Marca todas las que apliquen.</p>
+          <div class="mt-4 flex flex-wrap gap-3">
+            @for (c of opcionesCondicion; track c.key) {
+              <button type="button" (click)="toggleCondicion(c.key)"
+                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border font-medium transition-colors cursor-pointer"
+                [ngClass]="conditions[c.key]
+                  ? 'bg-teal-mid border-teal-mid text-white'
+                  : 'bg-white border-green-cream text-ink hover:bg-cream-2'">
+                @if (conditions[c.key]) { <lucide-angular [img]="CheckIcon" [size]="16" /> }
+                {{ c.label }}
+              </button>
+            }
           </div>
 
-          <hr class="border-gray-100" />
-
-          <!-- ── Condiciones Médicas ── -->
-          <div class="px-6 py-6">
-            <div class="flex items-center gap-2 mb-5">
-              <lucide-angular [img]="StethoscopeIcon" [size]="17" class="text-primary-500" />
-              <h3 class="text-sm font-semibold text-gray-800">Condiciones médicas</h3>
-            </div>
-            <div class="grid grid-cols-2 gap-y-4 gap-x-8">
-              <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" [(ngModel)]="conditions.ninguna" name="ninguna"
-                  class="accent-primary-500 w-4 h-4 rounded cursor-pointer" />
-                <span class="text-sm text-gray-700">Ninguna</span>
-              </label>
-              <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" [(ngModel)]="conditions.diabetes" name="diabetes"
-                  class="accent-primary-500 w-4 h-4 rounded cursor-pointer" />
-                <span class="text-sm text-gray-700">Diabetes</span>
-              </label>
-              <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" [(ngModel)]="conditions.hipertension" name="hipertension"
-                  class="accent-primary-500 w-4 h-4 rounded cursor-pointer" />
-                <span class="text-sm text-gray-700">Hipertensión</span>
-              </label>
-              <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" [(ngModel)]="conditions.asma" name="asma"
-                  class="accent-primary-500 w-4 h-4 rounded cursor-pointer" />
-                <span class="text-sm text-gray-700">Asma</span>
-              </label>
-              <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" [(ngModel)]="conditions.otra" name="otra"
-                  class="accent-primary-500 w-4 h-4 rounded cursor-pointer" />
-                <span class="text-sm text-gray-400 italic">Otra condición...</span>
-              </label>
-            </div>
+          <div class="mt-5 max-w-xl">
+            <label for="otra" class="block text-sm font-medium text-ink mb-2">
+              Otra condición <span class="font-normal text-ink-soft">(opcional)</span>
+            </label>
+            <input id="otra" type="text" [ngModel]="otraCondicion" (ngModelChange)="onOtraCondicion($event)" name="otra" maxlength="120"
+              placeholder="Ej. intolerancia a la lactosa"
+              class="w-full px-4 py-3.5 rounded-2xl border border-green-cream bg-cream text-ink placeholder:text-ink-soft/60 focus:outline-none focus:ring-2 focus:ring-teal-mid/20 focus:border-teal-mid transition-all" />
           </div>
+        </section>
 
+        <!-- Acciones -->
+        <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-4 pb-4">
+          <p class="text-sm text-ink-soft">Al guardar, recalculamos tu meta diaria de calorías y macros.</p>
+          <div class="flex items-center gap-3">
+            <a routerLink="/cliente/perfil"
+               class="flex-1 sm:flex-none text-center px-6 py-3.5 rounded-2xl bg-white border border-green-cream text-ink font-semibold hover:bg-cream-2 transition-colors">
+              Cancelar
+            </a>
+            <button (click)="save()" [disabled]="saving() || loading()"
+              class="flex-1 sm:flex-none px-7 py-3.5 rounded-2xl bg-teal-mid text-white font-bold shadow-lg shadow-teal-mid/25 hover:bg-teal-deep disabled:opacity-50 transition-colors cursor-pointer">
+              {{ saving() ? 'Guardando...' : 'Guardar cambios' }}
+            </button>
+          </div>
         </div>
       }
     </div>
@@ -229,24 +184,39 @@ export class EditarPerfilComponent implements OnInit {
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
 
-  readonly ScaleIcon = Scale;
-  readonly RulerIcon = Ruler;
-  readonly ActivityIcon = Activity;
-  readonly TargetIcon = Target;
-  readonly StethoscopeIcon = Stethoscope;
-  readonly XIcon = X;
-  readonly SaveIcon = Save;
+  readonly ChevronLeftIcon = ChevronLeft;
+  readonly CheckIcon = Check;
+
+  readonly objetivos = [
+    { value: 'Perder peso', label: 'Perder peso', icon: TrendingDown, desc: 'Un déficit calórico suave, sin dietas extremas.' },
+    { value: 'Mantener peso', label: 'Mantener peso', icon: ArrowLeftRight, desc: 'Comer equilibrado y sostener lo que ya lograste.' },
+    { value: 'Ganar masa', label: 'Ganar masa muscular', icon: Dumbbell, desc: 'Más proteína y calorías para acompañar tu entreno.' },
+  ];
+
+  readonly niveles = [
+    { value: 'Sedentario', desc: 'Poco o nada de ejercicio' },
+    { value: 'Ligero', desc: '1–3 días por semana' },
+    { value: 'Moderado', desc: '3–5 días por semana' },
+    { value: 'Intenso', desc: '6–7 días por semana' },
+  ];
+
+  readonly opcionesCondicion: { key: CondicionKey; label: string }[] = [
+    { key: 'ninguna', label: 'Ninguna' },
+    { key: 'diabetes', label: 'Diabetes' },
+    { key: 'hipertension', label: 'Hipertensión' },
+    { key: 'asma', label: 'Asma' },
+  ];
 
   weight = 0;
   height = 0;
   activityLevel = 'Moderado';
   goal = 'Mantener peso';
-  conditions = {
+  otraCondicion = '';
+  conditions: Record<CondicionKey, boolean> = {
     ninguna: false,
     diabetes: false,
     hipertension: false,
     asma: false,
-    otra: false,
   };
 
   ngOnInit(): void {
@@ -254,9 +224,10 @@ export class EditarPerfilComponent implements OnInit {
       next: (data) => {
         this.weight = data.weight;
         this.height = data.height;
-        this.activityLevel = data.activity_level;
+        // "Muy intenso" ya no es una opción: se muestra como "Intenso"
+        this.activityLevel = data.activity_level === 'Muy intenso' ? 'Intenso' : data.activity_level;
         this.goal = data.goal;
-        this.prefillConditions(data.medical_conditions);
+        this.prefillConditions(data.medical_conditions ?? []);
         this.loading.set(false);
       },
       error: () => {
@@ -264,6 +235,27 @@ export class EditarPerfilComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  imcEstimado(): string | null {
+    if (!this.weight || !this.height || this.height < 60) return null;
+    return (this.weight / Math.pow(this.height / 100, 2)).toFixed(1);
+  }
+
+  toggleCondicion(key: CondicionKey): void {
+    if (key === 'ninguna') {
+      // "Ninguna" excluye a las demás
+      this.conditions = { ninguna: !this.conditions.ninguna, diabetes: false, hipertension: false, asma: false };
+      if (this.conditions.ninguna) this.otraCondicion = '';
+      return;
+    }
+    this.conditions[key] = !this.conditions[key];
+    if (this.conditions[key]) this.conditions.ninguna = false;
+  }
+
+  onOtraCondicion(valor: string): void {
+    this.otraCondicion = valor;
+    if (valor.trim()) this.conditions.ninguna = false;
   }
 
   save(): void {
@@ -310,14 +302,19 @@ export class EditarPerfilComponent implements OnInit {
   }
 
   private prefillConditions(apiConditions: string[]): void {
-    const normalized = apiConditions.map(c => c.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''));
-    this.conditions.ninguna = apiConditions.length === 0 || normalized.includes('ninguna');
-    this.conditions.diabetes = normalized.includes('diabetes');
-    this.conditions.hipertension = normalized.includes('hipertension');
-    this.conditions.asma = normalized.includes('asma');
-    this.conditions.otra = apiConditions.some(
-      c => !['ninguna', 'diabetes', 'hipertensión', 'hipertension', 'asma'].includes(c.toLowerCase())
-    );
+    const sinTildes = (c: string) => c.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+    const conocidas = ['ninguna', 'diabetes', 'hipertension', 'asma'];
+    const normalizadas = apiConditions.map(sinTildes);
+
+    this.conditions = {
+      ninguna: apiConditions.length === 0 || normalizadas.includes('ninguna'),
+      diabetes: normalizadas.includes('diabetes'),
+      hipertension: normalizadas.includes('hipertension'),
+      asma: normalizadas.includes('asma'),
+    };
+    // Las condiciones que no están entre las opciones van al campo "Otra condición"
+    this.otraCondicion = apiConditions.filter(c => !conocidas.includes(sinTildes(c))).join(', ');
+    if (this.otraCondicion) this.conditions.ninguna = false;
   }
 
   private buildConditionsArray(): string[] {
@@ -326,6 +323,8 @@ export class EditarPerfilComponent implements OnInit {
     if (this.conditions.diabetes) result.push('Diabetes');
     if (this.conditions.hipertension) result.push('Hipertensión');
     if (this.conditions.asma) result.push('Asma');
+    const otra = this.otraCondicion.trim();
+    if (otra) result.push(otra);
     return result;
   }
 }

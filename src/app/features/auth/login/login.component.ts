@@ -14,19 +14,36 @@ import { LucideAngularModule, Flame } from 'lucide-angular';
   selector: 'app-login',
   imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule],
   template: `
-    <div class="hero-gradient min-h-screen flex items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
-      <!-- Decorative background elements -->
-      <div class="fixed inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute -top-40 -right-40 w-80 h-80 bg-primary-100/40 rounded-full blur-3xl"></div>
-        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-accent-100/40 rounded-full blur-3xl"></div>
+    <div class="relative min-h-screen md:h-screen md:min-h-0 overflow-hidden bg-cream-2 md:bg-cream flex flex-col md:items-center md:justify-center md:px-6 md:py-4">
+      <!-- Decorative rings -->
+      <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <div class="absolute rounded-full border-[18px] md:border-[26px] border-cyan-ring/30
+                    w-[420px] h-[420px] -top-52 left-[30%]
+                    md:w-[640px] md:h-[640px] md:-top-80 md:left-auto md:-right-48">
+          <span class="absolute left-[14%] top-[82%] w-5 h-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-cyan-ring bg-cream"></span>
+        </div>
+        <div class="absolute rounded-full border-[14px] md:border-[20px] border-green-pale/70
+                    w-[300px] h-[300px] top-16 -left-56
+                    md:w-[440px] md:h-[440px] md:top-auto md:-bottom-60 md:-left-52">
+          <span class="absolute left-[62%] top-[9%] w-4 h-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-green-leaf bg-cream"></span>
+        </div>
       </div>
 
-      <!-- Login Card -->
-      <div class="relative w-full max-w-md animate-fade-in-up">
-        <div class="bg-white rounded-2xl shadow-xl shadow-primary-500/5 border border-gray-100 p-8 sm:p-10">
+      <!-- Mobile header -->
+      <div class="relative z-10 md:hidden text-center pt-12 pb-10 px-6">
+        <img src="/logo-calofit.png" alt="Logo de Calofit" class="w-44 h-auto mx-auto" />
+        <p class="mt-3 text-base font-semibold text-teal-mid">Tu ritmo, tus calorías, tus resultados</p>
+      </div>
+
+      <div class="relative z-10 w-full flex-1 flex flex-col md:flex-none md:max-w-md animate-fade-in-up">
+        <!-- Login Card -->
+        <div class="flex-1 flex flex-col bg-white px-6 pt-8 pb-8 rounded-t-[2rem] shadow-[0_-8px_30px_-12px_rgba(23,62,64,0.15)]
+                    md:flex-none md:rounded-[2rem] md:px-10 md:py-[clamp(1rem,3.5vh,2.5rem)] md:border md:border-green-cream md:shadow-xl md:shadow-teal-deep/10">
           <!-- Logo & Title -->
-          <div class="text-center mb-8">
-            <img src="/calofitlogo.png" alt="Logo de Calofit" class="w-32 h-auto mx-auto" />
+          <div class="mb-6 md:mb-[clamp(0.75rem,2.5vh,1.5rem)] md:text-center">
+            <img src="/logo-calofit.png" alt="Logo de Calofit" class="hidden md:block mx-auto w-auto md:h-[clamp(5rem,17vh,10rem)] md:mb-[clamp(0.25rem,1.5vh,1rem)]" />
+            <h1 class="text-2xl md:text-3xl font-extrabold text-teal-deep">¡Hola de nuevo!</h1>
+            <p class="mt-1 text-sm md:text-base text-ink-soft">Ingresa para seguir avanzando a tu ritmo.</p>
           </div>
 
           <!-- Pending Account Alert -->
@@ -66,117 +83,107 @@ import { LucideAngularModule, Flame } from 'lucide-angular';
           }
 
           <!-- Login Form -->
-          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
-            <!-- Email Field -->
-            <div>
-              <div class="relative">
-                <input
-                  type="email"
-                  id="email"
-                  formControlName="email"
-                  placeholder=" "
-                  class="peer w-full px-4 pt-5 pb-2 text-sm text-gray-900 bg-gray-50/50 border border-gray-200 rounded-xl
-                         focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500
-                         transition-all duration-200"
-                  [class.border-danger-400]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
-                />
-                <label
-                  for="email"
-                  class="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none
-                         transition-all duration-200
-                         peer-focus:top-3 peer-focus:text-xs peer-focus:text-primary-500
-                         peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:text-xs"
-                >
-                  Correo electrónico
-                </label>
-              </div>
-              @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
-                <p class="mt-1.5 text-xs text-danger-500 pl-1">Ingresa un correo válido</p>
-              }
-            </div>
-
-            <!-- Password Field -->
-            <div>
-              <div class="relative">
-                <input
-                  [type]="showPassword() ? 'text' : 'password'"
-                  id="password"
-                  formControlName="password"
-                  placeholder=" "
-                  class="peer w-full px-4 pt-5 pb-2 pr-12 text-sm text-gray-900 bg-gray-50/50 border border-gray-200 rounded-xl
-                         focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500
-                         transition-all duration-200"
-                  [class.border-danger-400]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-                />
-                <label
-                  for="password"
-                  class="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none
-                         transition-all duration-200
-                         peer-focus:top-3 peer-focus:text-xs peer-focus:text-primary-500
-                         peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:text-xs"
-                >
-                  Contraseña
-                </label>
-                <button
-                  type="button"
-                  (click)="showPassword.set(!showPassword())"
-                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1"
-                >
-                  @if (showPassword()) {
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.59 6.59m7.532 7.532l3.29 3.29M3 3l18 18"/>
-                    </svg>
-                  } @else {
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                    </svg>
-                  }
-                </button>
-              </div>
-              @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
-                <p class="mt-1.5 text-xs text-danger-500 pl-1">La contraseña es requerida</p>
-              }
-            </div>
-
-            <!-- Remember Me + Forgot Password -->
-            <div class="flex items-center justify-between">
-              <label class="flex items-center gap-2 cursor-pointer group">
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="flex-1 flex flex-col">
+            <div class="space-y-5 md:space-y-[clamp(0.75rem,2.2vh,1.25rem)] mb-8 md:mb-0">
+              <!-- Email Field -->
+              <div>
+                <label for="email" class="block mb-2 text-sm font-semibold text-ink">Correo electrónico</label>
                 <div class="relative">
+                  <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-mid pointer-events-none" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <rect x="3" y="5" width="18" height="14" rx="2.5"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.5 7l8.5 6 8.5-6"/>
+                  </svg>
                   <input
-                    type="checkbox"
-                    formControlName="rememberMe"
-                    class="peer sr-only"
+                    type="email"
+                    id="email"
+                    formControlName="email"
+                    placeholder="tucorreo@dominio.pe"
+                    autocomplete="email"
+                    class="w-full pl-12 pr-4 py-3.5 md:py-[clamp(0.6rem,1.8vh,0.875rem)] text-sm text-ink placeholder:text-ink-soft/50 bg-cream border border-green-cream rounded-2xl
+                           focus:outline-none focus:ring-2 focus:ring-teal-mid/20 focus:border-teal-mid
+                           transition-all duration-200"
+                    [class.border-danger-500]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
                   />
-                  <div class="w-5 h-5 border-2 border-gray-300 rounded-md
-                              peer-checked:bg-primary-500 peer-checked:border-primary-500
-                              transition-all duration-200
-                              group-hover:border-primary-400
-                              flex items-center justify-center">
-                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                    </svg>
-                  </div>
                 </div>
-                <span class="text-sm text-gray-600 select-none">Recordarme</span>
-              </label>
-              <a
-                routerLink="/forgot-password"
-                class="text-sm font-medium text-primary-500 hover:text-primary-600 transition-colors"
-              >
-                ¿Olvidaste tu contraseña?
-              </a>
+                @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+                  <p class="mt-1.5 text-xs text-danger-500 pl-1">Ingresa un correo válido</p>
+                }
+              </div>
+
+              <!-- Password Field -->
+              <div>
+                <label for="password" class="block mb-2 text-sm font-semibold text-ink">Contraseña</label>
+                <div class="relative">
+                  <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-mid pointer-events-none" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <rect x="5" y="10.5" width="14" height="9.5" rx="2"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 10.5V8a4 4 0 118 0v2.5"/>
+                  </svg>
+                  <input
+                    [type]="showPassword() ? 'text' : 'password'"
+                    id="password"
+                    formControlName="password"
+                    placeholder="Tu contraseña"
+                    autocomplete="current-password"
+                    class="w-full pl-12 pr-12 py-3.5 md:py-[clamp(0.6rem,1.8vh,0.875rem)] text-sm text-ink placeholder:text-ink-soft/50 bg-cream border border-green-cream rounded-2xl
+                           focus:outline-none focus:ring-2 focus:ring-teal-mid/20 focus:border-teal-mid
+                           transition-all duration-200"
+                    [class.border-danger-500]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+                  />
+                  <button
+                    type="button"
+                    (click)="showPassword.set(!showPassword())"
+                    [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-ink hover:text-teal-mid transition-colors p-1"
+                  >
+                    @if (showPassword()) {
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.59 6.59m7.532 7.532l3.29 3.29M3 3l18 18"/>
+                      </svg>
+                    } @else {
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                      </svg>
+                    }
+                  </button>
+                </div>
+                @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+                  <p class="mt-1.5 text-xs text-danger-500 pl-1">La contraseña es requerida</p>
+                }
+              </div>
+
+              <!-- Remember Me + Forgot Password -->
+              <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2.5 cursor-pointer group">
+                  <div class="relative">
+                    <input type="checkbox" formControlName="rememberMe" class="peer sr-only" />
+                    <div class="w-5 h-5 border-2 border-ink-soft/40 rounded-md bg-white
+                                peer-checked:bg-teal-mid peer-checked:border-teal-mid
+                                peer-focus-visible:ring-2 peer-focus-visible:ring-teal-mid/30
+                                transition-all duration-200 group-hover:border-teal-mid
+                                flex items-center justify-center">
+                      <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="text-sm text-ink-soft select-none">Recordarme</span>
+                </label>
+                <a routerLink="/forgot-password" class="text-sm font-semibold text-teal-mid hover:text-teal-deep transition-colors">
+                  ¿Olvidaste tu contraseña?
+                </a>
+              </div>
             </div>
 
             <!-- Submit Button -->
             <button
               type="submit"
               [disabled]="loading()"
-              class="w-full py-3.5 px-6 bg-primary-500 text-white font-semibold rounded-xl
-                     hover:bg-primary-600 active:bg-primary-700
-                     focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2
+              class="mt-auto md:mt-[clamp(0.75rem,2.5vh,1.5rem)] w-full py-4 md:py-[clamp(0.7rem,2vh,1rem)] px-6 bg-teal-mid text-white font-bold rounded-2xl
+                     hover:bg-teal-deep active:bg-teal-deep
+                     focus:outline-none focus:ring-2 focus:ring-teal-mid/50 focus:ring-offset-2
                      disabled:opacity-60 disabled:cursor-not-allowed
-                     transition-all duration-200 transform hover:shadow-lg hover:shadow-primary-500/25
+                     transition-all duration-200 shadow-lg shadow-teal-mid/25
                      flex items-center justify-center gap-2"
             >
               @if (loading()) {
@@ -195,19 +202,19 @@ import { LucideAngularModule, Flame } from 'lucide-angular';
           </form>
 
           <!-- Footer -->
-          <div class="mt-8 pt-6 border-t border-gray-100 text-center">
-            <p class="text-sm text-gray-500">
+          <div class="mt-6 md:mt-[clamp(0.75rem,3vh,2rem)] md:pt-[clamp(0.75rem,2.5vh,1.5rem)] md:border-t md:border-green-cream text-center">
+            <p class="text-sm text-ink-soft">
               ¿No tienes una cuenta?
-              <a [href]="whatsappUrl" target="_blank" rel="noopener noreferrer" class="font-semibold text-primary-500 hover:text-primary-600 transition-colors ml-1">
+              <a [href]="whatsappUrl" target="_blank" rel="noopener noreferrer" class="font-semibold text-teal-mid hover:text-teal-deep transition-colors">
                 Contacta al administrador
               </a>
             </p>
           </div>
         </div>
 
-        <!-- Bottom branding -->
-        <p class="text-center mt-6 text-xs text-gray-400">
-          © {{ currentYear }} Calofit by Pumpandas · Todos los derechos reservados
+        <!-- Bottom branding (desktop) -->
+        <p class="hidden md:block text-center md:mt-[clamp(0.5rem,2vh,1.5rem)] text-xs text-ink-soft">
+          © {{ currentYear }} Calofit · Tu ritmo, tus calorías, tus resultados
         </p>
       </div>
     </div>
